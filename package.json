@@ -1,0 +1,351 @@
+{
+  "name": "poc-vscode-addin",
+  "displayName": "POC VSCode Addin",
+  "description": "Proof of concept: sidebar tree view with Data/Skills sections and a simplified Ask AI panel.",
+  "version": "0.0.1",
+  "publisher": "poc",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onView:pocAskAiView",
+    "onView:pocSessionsView",
+    "onView:pocFilesView",
+    "onView:pocSkillsView",
+    "onCommand:poc-vscode-addin.sayHello",
+    "onCommand:poc-vscode-addin.askAi",
+    "onCommand:poc-vscode-addin.newSession",
+    "onCommand:poc-vscode-addin.openSession",
+    "onCommand:poc-vscode-addin.refreshExplorer"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "pocSidebar",
+          "title": "POC",
+          "icon": "media/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "pocSidebar": [
+        {
+          "id": "pocAskAiView",
+          "name": "Ask AI"
+        },
+        {
+          "id": "pocSessionsView",
+          "name": "Sessions"
+        },
+        {
+          "id": "pocFilesView",
+          "name": "Files"
+        },
+        {
+          "id": "pocSkillsView",
+          "name": "Skills"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "poc-vscode-addin.sayHello",
+        "title": "POC: Say Hello",
+        "category": "POC"
+      },
+      {
+        "command": "poc-vscode-addin.askAi",
+        "title": "POC: Ask AI",
+        "category": "POC",
+        "icon": "$(sparkle)"
+      },
+      {
+        "command": "poc-vscode-addin.newSession",
+        "title": "POC: New Discussion",
+        "category": "POC",
+        "icon": "$(plus)"
+      },
+      {
+        "command": "poc-vscode-addin.refreshExplorer",
+        "title": "POC: Refresh Explorer",
+        "category": "POC",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "poc-vscode-addin.copyFile",
+        "title": "Copy",
+        "category": "POC"
+      },
+      {
+        "command": "poc-vscode-addin.pasteFile",
+        "title": "Paste",
+        "category": "POC"
+      },
+      {
+        "command": "poc-vscode-addin.renameFile",
+        "title": "Rename",
+        "category": "POC"
+      },
+      {
+        "command": "poc-vscode-addin.deleteFile",
+        "title": "Delete",
+        "category": "POC"
+      },
+      {
+        "command": "poc-vscode-addin.revealFile",
+        "title": "Reveal in File Explorer",
+        "category": "POC"
+      },
+      {
+        "command": "poc-vscode-addin.copyPath",
+        "title": "Copy Path",
+        "category": "POC"
+      },
+      {
+        "command": "poc-vscode-addin.copyRelativePath",
+        "title": "Copy Relative Path",
+        "category": "POC"
+      },
+      {
+        "command": "poc-vscode-addin.newFile",
+        "title": "New File",
+        "category": "POC",
+        "icon": "$(new-file)"
+      },
+      {
+        "command": "poc-vscode-addin.newFolder",
+        "title": "New Folder",
+        "category": "POC",
+        "icon": "$(new-folder)"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "poc-vscode-addin.newFile",
+          "when": "view == pocFilesView",
+          "group": "navigation"
+        },
+        {
+          "command": "poc-vscode-addin.newFolder",
+          "when": "view == pocFilesView",
+          "group": "navigation"
+        },
+        {
+          "command": "poc-vscode-addin.refreshExplorer",
+          "when": "view == pocFilesView || view == pocSkillsView",
+          "group": "navigation"
+        },
+        {
+          "command": "poc-vscode-addin.newSession",
+          "when": "view == pocAskAiView || view == pocSessionsView",
+          "group": "navigation"
+        },
+        {
+          "command": "poc-vscode-addin.pasteFile",
+          "when": "view == pocFilesView && pocFilesClipboardHasData",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "poc-vscode-addin.newFile",
+          "when": "view == pocFilesView",
+          "group": "0_new"
+        },
+        {
+          "command": "poc-vscode-addin.newFolder",
+          "when": "view == pocFilesView",
+          "group": "0_new"
+        },
+        {
+          "command": "poc-vscode-addin.copyFile",
+          "when": "view == pocFilesView && (viewItem == dataFile || viewItem == dataFolder)",
+          "group": "1_clipboard"
+        },
+        {
+          "command": "poc-vscode-addin.pasteFile",
+          "when": "view == pocFilesView && (viewItem == dataFile || viewItem == dataFolder) && pocFilesClipboardHasData",
+          "group": "1_clipboard"
+        },
+        {
+          "command": "poc-vscode-addin.renameFile",
+          "when": "view == pocFilesView && (viewItem == dataFile || viewItem == dataFolder)",
+          "group": "2_modify"
+        },
+        {
+          "command": "poc-vscode-addin.deleteFile",
+          "when": "view == pocFilesView && (viewItem == dataFile || viewItem == dataFolder)",
+          "group": "2_modify"
+        },
+        {
+          "command": "poc-vscode-addin.revealFile",
+          "when": "view == pocFilesView && (viewItem == dataFile || viewItem == dataFolder)",
+          "group": "3_paths"
+        },
+        {
+          "command": "poc-vscode-addin.copyPath",
+          "when": "view == pocFilesView && (viewItem == dataFile || viewItem == dataFolder)",
+          "group": "3_paths"
+        },
+        {
+          "command": "poc-vscode-addin.copyRelativePath",
+          "when": "view == pocFilesView && (viewItem == dataFile || viewItem == dataFolder)",
+          "group": "3_paths"
+        }
+      ],
+      "view/context": [
+        {
+          "command": "poc-vscode-addin.newFile",
+          "when": "view == pocFilesView",
+          "group": "0_new"
+        },
+        {
+          "command": "poc-vscode-addin.newFolder",
+          "when": "view == pocFilesView",
+          "group": "0_new"
+        },
+        {
+          "command": "poc-vscode-addin.pasteFile",
+          "when": "view == pocFilesView && pocFilesClipboardHasData",
+          "group": "1_clipboard"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "poc-vscode-addin.copyFile",
+          "when": "never"
+        },
+        {
+          "command": "poc-vscode-addin.pasteFile",
+          "when": "never"
+        },
+        {
+          "command": "poc-vscode-addin.renameFile",
+          "when": "never"
+        },
+        {
+          "command": "poc-vscode-addin.deleteFile",
+          "when": "never"
+        },
+        {
+          "command": "poc-vscode-addin.revealFile",
+          "when": "never"
+        },
+        {
+          "command": "poc-vscode-addin.copyPath",
+          "when": "never"
+        },
+        {
+          "command": "poc-vscode-addin.copyRelativePath",
+          "when": "never"
+        },
+        {
+          "command": "poc-vscode-addin.newFile",
+          "when": "never"
+        },
+        {
+          "command": "poc-vscode-addin.newFolder",
+          "when": "never"
+        }
+      ]
+    },
+    "languageModelTools": [
+      {
+        "name": "pocGoogleSearch",
+        "displayName": "Google Search in VS Code",
+        "userDescription": "Open a Google search in the VS Code Simple Browser.",
+        "modelDescription": "Opens a Google search for the given query in the VS Code Simple Browser (an editor tab inside VS Code). Use when the user asks to search the web, google something, or open a browser without leaving VS Code.",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "googleSearch",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "The search query to look up on Google. Keep it short: a few keywords."
+            }
+          },
+          "required": ["query"],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "pocDateTime",
+        "displayName": "Current Date and Time",
+        "userDescription": "Read the current date and time.",
+        "modelDescription": "Returns the current date and time. Use when the user asks for the time, date, day of the week, or anything time-sensitive.",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "dateTime",
+        "inputSchema": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "pocReadDataFile",
+        "displayName": "Read Data File",
+        "userDescription": "Read a file from the workspace data folder.",
+        "modelDescription": "Reads a text file from the workspace data folder (<workspace>/data). The path is relative to that folder, e.g. \"notes/todo.md\" — never use absolute paths. Use when the user asks to summarize, explain, quote or analyze a file. Files the user mentions without a folder are always in the data folder. Only files inside the data folder can be read.",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "readDataFile",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string",
+              "description": "Path relative to the data folder, e.g. \"notes/todo.md\"."
+            }
+          },
+          "required": ["path"],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "pocListDataFiles",
+        "displayName": "List Data Files",
+        "userDescription": "List files in the workspace data folder.",
+        "modelDescription": "Lists files and subfolders in the workspace data folder (<workspace>/data). The optional path is a subfolder relative to that folder; omit it to list the root. Use to discover which files exist before reading one.",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "listDataFiles",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string",
+              "description": "Subfolder relative to the data folder. Omit for the root."
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile",
+    "test": "vscode-test",
+    "test:unit": "npm run compile && mocha --ui tdd \"out/test/unit/**/*.test.js\"",
+    "lint": "eslint src"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^20.14.0",
+    "@types/vscode": "^1.90.0",
+    "@vscode/test-cli": "^0.0.10",
+    "@vscode/test-electron": "^2.4.1",
+    "eslint": "^8.57.0",
+    "mocha": "^10.7.0",
+    "typescript": "^5.4.5",
+    "typescript-eslint": "^7.13.0"
+  }
+}
