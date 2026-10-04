@@ -364,7 +364,7 @@
         "name": "pocGoogleSearch",
         "displayName": "Google Search in VS Code",
         "userDescription": "Open a Google search in the VS Code Simple Browser.",
-        "modelDescription": "Opens a Google search for the given query in the VS Code Simple Browser (an editor tab inside VS Code). Use when the user asks to search the web, google something, or open a browser without leaving VS Code.",
+        "modelDescription": "Opens a Google search for the given query in the VS Code Simple Browser (an editor tab inside VS Code). Use when the user asks to SEE search results in a browser. When the user asks YOU to search the internet and answer from it (\"using internet\", current prices, news), use the \"pocWebSearch\" tool instead: it returns readable results for you to summarize.",
         "canBeReferencedInPrompt": true,
         "toolReferenceName": "googleSearch",
         "inputSchema": {
@@ -376,6 +376,44 @@
             }
           },
           "required": ["query"],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "pocWebSearch",
+        "displayName": "Search the Internet",
+        "userDescription": "Search the internet and return readable results.",
+        "modelDescription": "Searches the internet for the given query and returns readable results: an instant answer with its source, a market quote for known indices, stocks, commodities and crypto (S&P 500, NASDAQ, gold, bitcoin, ...), related links and Wikipedia matches. Use when the user asks to use the internet or search the web (\"using internet\", \"on the internet\"), or needs fresh or external facts you cannot know: current prices, news, documentation. Summarize the results with their sources; never invent facts the results do not contain. If the results point at a page worth reading in full, read it with the \"pocFetchWebPage\" tool.",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "webSearch",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "The search query: a few keywords, e.g. \"current price of S&P 500\"."
+            }
+          },
+          "required": ["query"],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "pocFetchWebPage",
+        "displayName": "Read Web Page",
+        "userDescription": "Fetch a web page and return its readable text.",
+        "modelDescription": "Fetches an http(s) page and returns its readable text (truncated to 8000 characters). Use after \"pocWebSearch\" to read a promising result in full, or when the user gives a URL and asks to summarize or read it. Only public web pages: local and private-network URLs are refused.",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "fetchWebPage",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "url": {
+              "type": "string",
+              "description": "The full http(s) URL of the page to read."
+            }
+          },
+          "required": ["url"],
           "additionalProperties": false
         }
       },
@@ -608,7 +646,7 @@
             "type": "string"
           },
           "default": [],
-          "description": "Extra tool names offered to the Ask AI model, on top of the builtins (date/time, data files, browser, skills, terminal). Names that match no registered tool are silently ignored. External action tools may show VS Code's own popup in addition to the in-chat card. Empty array (default) keeps builtins only: every confirmation happens in-chat."
+          "description": "Extra tool names offered to the Ask AI model, on top of the builtins (date/time, data files, browser, web search, skills, terminal). Names that match no registered tool are silently ignored. External action tools may show VS Code's own popup in addition to the in-chat card. Empty array (default) keeps builtins only: every confirmation happens in-chat."
         },
         "poc-vscode-addin.confirmTools": {
           "type": "array",

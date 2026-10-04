@@ -5,7 +5,7 @@ import {
   stripAnsi,
   type ActionLogEntry
 } from './actionLog';
-import { agentEnvironmentPreamble, clarificationHint, historyGroundingHint, terminalToolHint } from './agentEnv';
+import { agentEnvironmentPreamble, clarificationHint, historyGroundingHint, terminalToolHint, webSearchHint } from './agentEnv';
 import {
   isAnswerResultMessage,
   isAskAiMessage,
@@ -28,7 +28,9 @@ import { CREATE_SKILL_TOOL_NAME, formatCreateSkillHint } from './skillCreate';
 import { listRunnableSkills } from './skillRunTool';
 import { DATE_TIME_TOOL_NAME } from './dateTime';
 import { GOOGLE_SEARCH_TOOL_NAME } from './searchUrl';
+import { WEB_SEARCH_TOOL_NAME } from './webSearch';
 import { OPEN_PAGE_TOOL_NAME } from './openPage';
+import { FETCH_PAGE_TOOL_NAME } from './fetchPage';
 import { APPEND_MEMORY_TOOL_NAME, READ_MEMORY_TOOL_NAME } from './memory';
 import { MODEL_SETTING_DEFAULT, MODEL_SETTING_KEY, pickChatModel } from './modelSelection';
 import { LIST_DATA_FILES_TOOL_NAME, READ_DATA_FILE_TOOL_NAME } from './dataFiles';
@@ -351,17 +353,19 @@ export class AskAiPanel {
       await webview.postMessage({ command: 'model', sessionId, name: model.name });
       // Agent mode: the model may call tools. Calls run silently — the panel
       // keeps showing "Thinking...". Builtins (date/time, data files, browser,
-      // memory, questions, skill runner, skill factory and terminal runner)
-      // plus the extra names from the tools setting; file tools resolve paths inside
-      // <workspace>/data implicitly. External terminal tools are dropped
-      // when the builtin is available so a run never asks twice (in-chat
-      // card + native popup).
+      // web search + page fetch, memory, questions, skill runner, skill factory
+      // and terminal runner) plus the extra names from the tools setting; file
+      // tools resolve paths inside <workspace>/data implicitly. External terminal
+      // tools are dropped when the builtin is available so a run never asks
+      // twice (in-chat card + native popup).
       const builtinTools = [
         DATE_TIME_TOOL_NAME,
         READ_DATA_FILE_TOOL_NAME,
         LIST_DATA_FILES_TOOL_NAME,
         GOOGLE_SEARCH_TOOL_NAME,
+        WEB_SEARCH_TOOL_NAME,
         OPEN_PAGE_TOOL_NAME,
+        FETCH_PAGE_TOOL_NAME,
         READ_MEMORY_TOOL_NAME,
         APPEND_MEMORY_TOOL_NAME,
         ASK_QUESTIONS_TOOL_NAME,
@@ -379,10 +383,12 @@ export class AskAiPanel {
         config.get<string[]>(CONFIRM_SETTING_KEY, [...CONFIRM_SETTING_DEFAULT]) ?? [];
       // Unsaved preamble: OS/shell match + default to the terminal tool
       // (only named when actually offered) + do-not-redo grounding +
-      // runnable skill catalog (so matching requests route to the skill
-      // runner instead of the terminal) + skill-factory nudge (creation
-      // requests delegate to the builder agent) + clarify-when-ambiguous
-      // nudge + structured-questions nudge (only named when offered).
+      // default to the web search tool on explicit internet requests (only
+      // named when actually offered) + runnable skill catalog (so matching
+      // requests route to the skill runner instead of the terminal) +
+      // skill-factory nudge (creation requests delegate to the builder
+      // agent) + clarify-when-ambiguous nudge + structured-questions nudge
+      // (only named when offered).
       const offeredNames = tools.map((tool) => tool.name);
       const skillsHint = offeredNames.includes(RUN_SKILL_TOOL_NAME)
         ? formatSkillsHint(await listRunnableSkills(), RUN_SKILL_TOOL_NAME)
@@ -397,6 +403,7 @@ export class AskAiPanel {
         agentEnvironmentPreamble() +
         terminalToolHint(offeredNames) +
         historyGroundingHint() +
+        webSearchHint(offeredNames) +
         clarificationHint() +
         skillsHint +
         createSkillHint +
