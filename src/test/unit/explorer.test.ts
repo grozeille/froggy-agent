@@ -1,5 +1,5 @@
 import * as assert from 'assert';
-import { extractSkillTitle } from '../../skills';
+import { extractSkillDescription, extractSkillTitle } from '../../skills';
 import { isAskAiMessage, isOpenLinkMessage } from '../../askAi';
 
 suite('skills', () => {
@@ -23,6 +23,32 @@ suite('skills', () => {
 
   test('trims whitespace', () => {
     assert.strictEqual(extractSkillTitle('  #   Spaced Title   \n', 'fallback'), 'Spaced Title');
+  });
+
+  test('extracts frontmatter description', () => {
+    const md = '---\nname: count-words\ndescription: Count words of a file.\n---\n\n# Count Words\n';
+    assert.strictEqual(extractSkillDescription(md, ''), 'Count words of a file.');
+  });
+
+  test('strips quotes around the description', () => {
+    assert.strictEqual(
+      extractSkillDescription('---\ndescription: "Quoted."\n---\n', ''),
+      'Quoted.'
+    );
+    assert.strictEqual(
+      extractSkillDescription("---\ndescription: 'Single.'\n---\n", ''),
+      'Single.'
+    );
+  });
+
+  test('falls back without frontmatter or description', () => {
+    assert.strictEqual(extractSkillDescription('# No Frontmatter\n', 'fallback'), 'fallback');
+    assert.strictEqual(extractSkillDescription('---\nname: x\n---\n', 'fallback'), 'fallback');
+    assert.strictEqual(extractSkillDescription('', 'fallback'), 'fallback');
+    assert.strictEqual(
+      extractSkillDescription('---\ndescription:\n---\n', 'fallback'),
+      'fallback'
+    );
   });
 });
 

@@ -42,6 +42,7 @@ h1 {
 .conversation {
   flex: 1;
   overflow-y: auto;
+  scrollbar-width: none;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -50,6 +51,10 @@ h1 {
   padding: 12px;
   margin-bottom: 8px;
   border-radius: 8px;
+}
+
+.conversation::-webkit-scrollbar {
+  display: none;
 }
 
 .conversation:empty::before {
@@ -84,6 +89,75 @@ h1 {
   color: var(--vscode-errorForeground);
   background: var(--vscode-inputValidation-errorBackground);
   border: 1px solid var(--vscode-inputValidation-errorBorder);
+}
+
+.message.confirm {
+  align-self: stretch;
+  color: var(--vscode-foreground);
+  background: var(--vscode-editor-background);
+  border: 1px solid var(--vscode-panel-border);
+}
+
+.message.confirm .confirm-title {
+  font-weight: 600;
+}
+
+.message.confirm code {
+  display: block;
+  margin-top: 6px;
+  white-space: pre-wrap;
+  word-break: break-all;
+  font-family: var(--vscode-editor-font-family);
+  background: var(--vscode-textCodeBlock-background);
+  padding: 6px 8px;
+  border-radius: 6px;
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.confirm-actions button {
+  font-family: inherit;
+  font-size: inherit;
+  padding: 4px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--vscode-panel-border);
+  cursor: pointer;
+}
+
+.confirm-actions button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.confirm-ok {
+  color: var(--vscode-button-foreground);
+  background: var(--vscode-button-background);
+  border-color: var(--vscode-button-background);
+}
+
+.confirm-ko {
+  color: var(--vscode-button-secondaryForeground);
+  background: var(--vscode-button-secondaryBackground);
+}
+
+.message.action-log {
+  align-self: center;
+  padding: 2px 10px;
+}
+
+.link-button {
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.9em;
+  color: var(--vscode-textLink-foreground);
+  text-decoration: underline;
 }
 
 .message.assistant > :first-child {
@@ -224,4 +298,26 @@ h1 {
 #prompt:focus {
   outline: 1px solid var(--vscode-focusBorder);
   outline-offset: -1px;
+}
+
+.form-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 6px;
+}
+
+#stop {
+  font-family: inherit;
+  font-size: inherit;
+  padding: 4px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--vscode-button-secondaryForeground);
+  background: var(--vscode-button-secondaryBackground);
+  border: 1px solid var(--vscode-panel-border);
+}
+
+#stop:disabled {
+  opacity: 0.55;
+  cursor: default;
 }

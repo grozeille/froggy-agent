@@ -1,11 +1,19 @@
 import * as assert from 'assert';
 import {
+  clearedSession,
+  createMainSession,
   createSession,
+  declinedToolResultText,
+  isMainSession,
+  MAIN_SESSION_ID,
+  MAIN_SESSION_TITLE,
   MAX_HISTORY_MESSAGES,
   NEW_SESSION_TITLE,
   recentMessages,
   titleFromPrompt,
-  withMessage
+  toReplayItems,
+  withMessage,
+  type ChatSession
 } from '../../sessions';
 
 suite('sessions', () => {
@@ -75,5 +83,132 @@ suite('sessions', () => {
 
   test('history budget is defined', () => {
     assert.strictEqual(MAX_HISTORY_MESSAGES, 20);
+  });
+
+  test('createMainSession uses the fixed main id and title', () => {
+    const session = createMainSession(1000);
+    assert.strictEqual(session.id, MAIN_SESSION_ID);
+    assert.strictEqual(session.id, 'main');
+    assert.strictEqual(session.title, MAIN_SESSION_TITLE);
+    assert.strictEqual(session.title, 'Main chat');
+    assert.deepStrictEqual(session.messages, []);
+    assert.strictEqual(session.createdAt, 1000);
+    assert.strictEqual(session.updatedAt, 1000);
+  });
+
+  test('isMainSession only matches the main session', () => {
+    assert.strictEqual(isMainSession(createMainSession(1000)), true);
+    assert.strictEqual(isMainSession(createSession('abc', 1000)), false);
+  });
+
+  test('declinedToolResultText names the tool and tells the model to move on', () => {
+    const text = declinedToolResultText('pocRunSkill');
+    assert.ok(text.includes('pocRunSkill'));
+    assert.match(text, /Do not retry it/);
+  });
+
+  test('toReplayItems passes plain messages through', () => {
+    assert.deepStrictEqual(
+      toReplayItems([
+        { role: 'user', text: 'hi' },
+        { role: 'assistant', text: 'hello' }
+      ]),
+      [
+        { kind: 'user', text: 'hi' },
+        { kind: 'assistant', text: 'hello' }
+      ]
+    );
+  });
+
+  test('toReplayItems expands past tool runs before the final text', () => {
+    const items = toReplayItems([
+      { role: 'user', text: 'list files' },
+      {
+        role: 'assistant',
+        text: 'here they are',
+        toolRuns: [
+          { tool: 'pocListDataFiles', input: {}, output: 'a.md', decision: 'auto' },
+          { tool: 'pocRunSkill', input: { skill: '' }, decision: 'declined' }
+        ]
+      }
+    ]);
+    assert.strictEqual(items.length, 3);
+    assert.deepStrictEqual(items[0], { kind: 'user', text: 'list files' });
+    const round = items[1];
+    assert.strictEqual(round.kind, 'toolRound');
+    if (round.kind === 'toolRound') {
+      assert.strictEqual(round.calls.length, 2);
+      assert.strictEqual(round.calls[0].callId, 'hist-1-0');
+      assert.strictEqual(round.calls[0].tool, 'pocListDataFiles');
+      assert.deepStrictEqual(round.calls[0].input, {});
+      assert.strictEqual(round.calls[0].resultText, 'a.md');
+      assert.strictEqual(round.calls[1].callId, 'hist-1-1');
+      assert.match(round.calls[1].resultText, /declined to run the "pocRunSkill" tool/);
+    }
+    assert.deepStrictEqual(items[2], { kind: 'assistant', text: 'here they are' });
+  });
+
+  test('toReplayItems normalizes bad input and missing output', () => {
+    const items = toReplayItems([
+      {
+        role: 'assistant',
+        text: '',
+        toolRuns: [
+          { tool: 'pocRunTerminal', input: 'dir', decision: 'auto' },
+          { tool: 'pocDateTime', input: null, output: 'now', decision: 'auto' }
+        ]
+      }
+    ]);
+    assert.strictEqual(items.length, 2);
+    const round = items[0];
+    assert.strictEqual(round.kind, 'toolRound');
+    if (round.kind === 'toolRound') {
+      assert.deepStrictEqual(round.calls[0].input, {});
+      assert.strictEqual(round.calls[0].resultText, '(no output)');
+      assert.deepStrictEqual(round.calls[1].input, {});
+      assert.strictEqual(round.calls[1].resultText, 'now');
+    }
+  });
+
+  test('toReplayItems skips the tool round without runs', () => {
+    assert.deepStrictEqual(toReplayItems([{ role: 'assistant', text: 'ok', toolRuns: [] }]), [
+      { kind: 'assistant', text: 'ok' }
+    ]);
+  });
+
+  test('tool runs survive JSON storage round-trip for replay', () => {
+    let session = createSession('abc', 1000);
+    session = withMessage(session, { role: 'user', text: 'q' }, 1001);
+    session = withMessage(
+      session,
+      {
+        role: 'assistant',
+        text: 'a',
+        toolRuns: [{ tool: 'pocDateTime', input: {}, output: 'now', decision: 'auto' }]
+      },
+      1002
+    );
+    const restored = JSON.parse(JSON.stringify(session)) as ChatSession;
+    const kinds = toReplayItems(recentMessages(restored, 20)).map((item) => item.kind);
+    assert.deepStrictEqual(kinds, ['user', 'toolRound', 'assistant']);
+  });
+
+  test('clearedSession empties messages and resets the title', () => {
+    let session = createSession('abc', 1000);
+    session = withMessage(session, { role: 'user', text: 'hi' }, 1001);
+    const cleared = clearedSession({ ...session, title: 'Old title' }, 2000);
+    assert.strictEqual(cleared.id, 'abc');
+    assert.deepStrictEqual(cleared.messages, []);
+    assert.strictEqual(cleared.title, NEW_SESSION_TITLE);
+    assert.strictEqual(cleared.updatedAt, 2000);
+    assert.strictEqual(cleared.createdAt, 1000);
+  });
+
+  test('clearedSession keeps the main chat title', () => {
+    let session = createMainSession(1000);
+    session = withMessage(session, { role: 'user', text: 'hi' }, 1001);
+    const cleared = clearedSession(session, 2000);
+    assert.deepStrictEqual(cleared.messages, []);
+    assert.strictEqual(cleared.title, MAIN_SESSION_TITLE);
   });
 });

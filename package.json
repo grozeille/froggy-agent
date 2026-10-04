@@ -19,7 +19,9 @@
     "onCommand:poc-vscode-addin.sayHello",
     "onCommand:poc-vscode-addin.askAi",
     "onCommand:poc-vscode-addin.newSession",
+    "onCommand:poc-vscode-addin.clearSession",
     "onCommand:poc-vscode-addin.openSession",
+    "onCommand:poc-vscode-addin.openMainChat",
     "onCommand:poc-vscode-addin.refreshExplorer"
   ],
   "main": "./out/extension.js",
@@ -70,6 +72,18 @@
         "title": "POC: New Discussion",
         "category": "POC",
         "icon": "$(plus)"
+      },
+      {
+        "command": "poc-vscode-addin.clearSession",
+        "title": "POC: Clear Discussion",
+        "category": "POC",
+        "icon": "$(clear-all)"
+      },
+      {
+        "command": "poc-vscode-addin.openMainChat",
+        "title": "POC: Open Main Chat",
+        "category": "POC",
+        "icon": "$(comment-discussion)"
       },
       {
         "command": "poc-vscode-addin.refreshExplorer",
@@ -145,6 +159,11 @@
         {
           "command": "poc-vscode-addin.newSession",
           "when": "view == pocAskAiView || view == pocSessionsView",
+          "group": "navigation"
+        },
+        {
+          "command": "poc-vscode-addin.clearSession",
+          "when": "view == pocAskAiView",
           "group": "navigation"
         },
         {
@@ -309,6 +328,32 @@
         }
       },
       {
+        "name": "pocRunSkill",
+        "displayName": "Run Skill Script",
+        "userDescription": "Run a skill's pre-designed Python script.",
+        "modelDescription": "Runs a pre-designed Python script for a workspace skill: <workspace>/.github/skills/<skill>/run.py. The skill is the skill folder name; pass an empty skill to list the runnable skills (with their titles) instead of running one. Optional args are passed to the script; paths inside args are relative to the workspace root (e.g. \"data/notes.md\"). Scripts run with the workspace .venv interpreter when present, else PATH python, with a 60s timeout. Use when the user asks to run a skill, or when a skill matches the request.",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "runSkill",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "skill": {
+              "type": "string",
+              "description": "Skill folder name, or empty to list the runnable skills."
+            },
+            "args": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Extra arguments passed to the script."
+            }
+          },
+          "required": ["skill"],
+          "additionalProperties": false
+        }
+      },
+      {
         "name": "pocListDataFiles",
         "displayName": "List Data Files",
         "userDescription": "List files in the workspace data folder.",
@@ -325,8 +370,113 @@
           },
           "additionalProperties": false
         }
+      },
+      {
+        "name": "pocRunTerminal",
+        "displayName": "Run Terminal Command",
+        "userDescription": "Run a shell command and return its output.",
+        "modelDescription": "Runs a shell command from the workspace root and returns its truncated output (60s timeout). Use when the user asks to run, execute or check something on this machine. The command must use OS-matching syntax from the system preamble. The optional explanation is one short sentence describing what the command does; it is shown to the user in the confirmation card.",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "runTerminal",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "command": {
+              "type": "string",
+              "description": "The shell command to run."
+            },
+            "explanation": {
+              "type": "string",
+              "description": "One short sentence describing what the command does."
+            }
+          },
+          "required": ["command"],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "pocOpenBrowserPage",
+        "displayName": "Open Browser Page",
+        "userDescription": "Open any web page in the VS Code Simple Browser.",
+        "modelDescription": "Opens the given web page in the VS Code Simple Browser (an editor tab inside VS Code). Use when the user asks to open, show or visit a page or site. Only http(s) URLs.",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "openPage",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "url": {
+              "type": "string",
+              "description": "The full http(s) URL of the page to open."
+            }
+          },
+          "required": ["url"],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "pocReadMemory",
+        "displayName": "Read Memory",
+        "userDescription": "Read the workspace memory.md file.",
+        "modelDescription": "Reads memory.md at the workspace root: facts the user asked to remember (name, preferences, ...). Use when the user asks what you remember or know about them, or refers to something memorized. Never claim to remember something without reading this file first.",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "readMemory",
+        "inputSchema": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "pocAppendMemory",
+        "displayName": "Memorize in Memory",
+        "userDescription": "Append one fact to the workspace memory.md file.",
+        "modelDescription": "Appends one short fact to memory.md at the workspace root (one line, e.g. the user's name). Use when the user asks to remember, memorize, note or save something (including French: memorise, retiens, souviens-toi, note). One fact per call. Never claim something is memorized without calling this tool.",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "appendMemory",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "note": {
+              "type": "string",
+              "description": "One short fact to remember, e.g. the user's name."
+            }
+          },
+          "required": ["note"],
+          "additionalProperties": false
+        }
       }
-    ]
+    ],
+    "configuration": {
+      "title": "POC VSCode Addin",
+      "properties": {
+        "poc-vscode-addin.model": {
+          "type": "string",
+          "default": "auto",
+          "description": "Chat model for Ask AI: \"auto\" (default) uses the first available model, or a model id, name, family or \"vendor/family\" as shown in the model picker (e.g. an Ollama model). The effective model is shown in the Ask AI panel badge."
+        },
+        "poc-vscode-addin.tools": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "Extra tool names offered to the Ask AI model, on top of the builtins (date/time, data files, browser, skills, terminal). Names that match no registered tool are silently ignored. External action tools may show VS Code's own popup in addition to the in-chat card. Empty array (default) keeps builtins only: every confirmation happens in-chat."
+        },
+        "poc-vscode-addin.confirmTools": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "pocRunTerminal",
+            "run_in_terminal",
+            "send_to_terminal",
+            "pocRunSkill"
+          ],
+          "description": "Tool names asking for a Continue/Cancel confirmation before running. Reads outside the workspace data folder are only possible through these tools. Empty array disables confirmation. The builtin pocRunTerminal replaces run_in_terminal/send_to_terminal, which would also show VS Code's own popup on top of the in-chat card."
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",

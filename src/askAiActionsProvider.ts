@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { MEMORY_FILE_NAME, NEW_DISCUSSION_LABEL } from './sections';
+import { MAIN_CHAT_LABEL, MEMORY_FILE_NAME } from './sections';
 import { infoTreeItem } from './treeItems';
 
 export class AskAiActionsProvider implements vscode.TreeDataProvider<vscode.TreeItem> {
@@ -10,13 +10,13 @@ export class AskAiActionsProvider implements vscode.TreeDataProvider<vscode.Tree
   }
 
   public getChildren(): vscode.TreeItem[] {
-    const fresh = new vscode.TreeItem(NEW_DISCUSSION_LABEL, vscode.TreeItemCollapsibleState.None);
-    fresh.iconPath = new vscode.ThemeIcon('plus');
-    fresh.command = { command: 'poc-vscode-addin.newSession', title: 'New Discussion' };
-    fresh.tooltip = 'Start a new discussion';
-    fresh.contextValue = 'newSession';
+    const main = new vscode.TreeItem(MAIN_CHAT_LABEL, vscode.TreeItemCollapsibleState.None);
+    main.iconPath = new vscode.ThemeIcon('comment-discussion');
+    main.command = { command: 'poc-vscode-addin.openMainChat', title: 'Main Chat' };
+    main.tooltip = 'Open the main chat';
+    main.contextValue = 'mainChat';
 
-    const items: vscode.TreeItem[] = [fresh];
+    const items: vscode.TreeItem[] = [main];
     const root = vscode.workspace.workspaceFolders?.[0]?.uri;
     if (!root) {
       items.push(infoTreeItem('Open a workspace folder to see Memory.'));

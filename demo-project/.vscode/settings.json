@@ -1,5 +1,8 @@
 {
   "workbench.editorAssociations": {
     "*.md": "vscode.markdown.preview.editor"
-  }
+  },
+  "poc-vscode-addin.model": "muse-spark-1.3-contributor"
+  // poc-vscode-addin.tools / confirmTools intentionally unset: the demo uses
+  // the builtins-only defaults (in-chat confirmations, no native popups).
 }

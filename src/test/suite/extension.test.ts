@@ -15,7 +15,9 @@ suite('Extension Test Suite', () => {
     assert.ok(commands.includes('poc-vscode-addin.sayHello'));
     assert.ok(commands.includes('poc-vscode-addin.askAi'));
     assert.ok(commands.includes('poc-vscode-addin.newSession'));
+    assert.ok(commands.includes('poc-vscode-addin.clearSession'));
     assert.ok(commands.includes('poc-vscode-addin.openSession'));
+    assert.ok(commands.includes('poc-vscode-addin.openMainChat'));
     assert.ok(commands.includes('poc-vscode-addin.refreshExplorer'));
     assert.ok(commands.includes('poc-vscode-addin.copyFile'));
     assert.ok(commands.includes('poc-vscode-addin.pasteFile'));
@@ -27,6 +29,16 @@ suite('Extension Test Suite', () => {
     assert.ok(commands.includes('poc-vscode-addin.newFile'));
     assert.ok(commands.includes('poc-vscode-addin.newFolder'));
     assert.ok(commands.includes('poc-vscode-addin.openPreview'));
+  });
+
+  test('Should default the model setting to auto', async () => {
+    const ext = vscode.extensions.getExtension('poc.poc-vscode-addin');
+    assert.ok(ext);
+    await ext.activate();
+    assert.strictEqual(
+      vscode.workspace.getConfiguration('poc-vscode-addin').get('model'),
+      'auto'
+    );
   });
 
   test('Should register the Google search language model tool', async () => {
@@ -52,6 +64,54 @@ suite('Extension Test Suite', () => {
     assert.ok(
       vscode.lm.tools.some((tool) => tool.name === 'pocListDataFiles'),
       'pocListDataFiles tool should be registered'
+    );
+  });
+
+  test('Should register the run-skill language model tool', async () => {
+    const ext = vscode.extensions.getExtension('poc.poc-vscode-addin');
+    assert.ok(ext);
+    await ext.activate();
+    assert.ok(vscode.lm, 'Language model API should be available');
+    assert.ok(
+      vscode.lm.tools.some((tool) => tool.name === 'pocRunSkill'),
+      'pocRunSkill tool should be registered'
+    );
+  });
+
+  test('Should register the terminal language model tool', async () => {
+    const ext = vscode.extensions.getExtension('poc.poc-vscode-addin');
+    assert.ok(ext);
+    await ext.activate();
+    assert.ok(vscode.lm, 'Language model API should be available');
+    assert.ok(
+      vscode.lm.tools.some((tool) => tool.name === 'pocRunTerminal'),
+      'pocRunTerminal tool should be registered'
+    );
+  });
+
+  test('Should register the open-page language model tool', async () => {
+    const ext = vscode.extensions.getExtension('poc.poc-vscode-addin');
+    assert.ok(ext);
+    await ext.activate();
+    assert.ok(vscode.lm, 'Language model API should be available');
+    assert.ok(
+      vscode.lm.tools.some((tool) => tool.name === 'pocOpenBrowserPage'),
+      'pocOpenBrowserPage tool should be registered'
+    );
+  });
+
+  test('Should register the memory language model tools', async () => {
+    const ext = vscode.extensions.getExtension('poc.poc-vscode-addin');
+    assert.ok(ext);
+    await ext.activate();
+    assert.ok(vscode.lm, 'Language model API should be available');
+    assert.ok(
+      vscode.lm.tools.some((tool) => tool.name === 'pocReadMemory'),
+      'pocReadMemory tool should be registered'
+    );
+    assert.ok(
+      vscode.lm.tools.some((tool) => tool.name === 'pocAppendMemory'),
+      'pocAppendMemory tool should be registered'
     );
   });
 

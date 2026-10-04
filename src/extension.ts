@@ -8,6 +8,10 @@ import { AskAiPanel } from './AskAiPanel';
 import { registerGoogleSearchTool } from './searchTool';
 import { registerDateTimeTool } from './dateTimeTool';
 import { registerDataFileTools } from './dataFilesTool';
+import { registerRunSkillTool } from './skillRunTool';
+import { registerTerminalTool } from './terminalTool';
+import { registerOpenPageTool } from './openPageTool';
+import { registerMemoryTools } from './memoryTool';
 import { SessionStore } from './sessionStore';
 
 export function activate(context: vscode.ExtensionContext): void {
@@ -43,8 +47,15 @@ export function activate(context: vscode.ExtensionContext): void {
       const session = await store.create();
       await AskAiPanel.createOrShow(context.extensionUri, store, session.id);
     }),
+    vscode.commands.registerCommand('poc-vscode-addin.clearSession', async () => {
+      await AskAiPanel.currentPanel?.clearSession();
+    }),
     vscode.commands.registerCommand('poc-vscode-addin.openSession', async (sessionId?: string) => {
       await AskAiPanel.createOrShow(context.extensionUri, store, sessionId);
+    }),
+    vscode.commands.registerCommand('poc-vscode-addin.openMainChat', async () => {
+      const session = await store.getOrCreateMain();
+      await AskAiPanel.createOrShow(context.extensionUri, store, session.id);
     }),
     vscode.commands.registerCommand('poc-vscode-addin.refreshExplorer', () => {
       sessionsProvider.refresh();
@@ -62,7 +73,7 @@ export function activate(context: vscode.ExtensionContext): void {
     })
   );
 
-  for (const tool of [registerGoogleSearchTool(), registerDateTimeTool(), ...registerDataFileTools()]) {
+  for (const tool of [registerGoogleSearchTool(), registerDateTimeTool(), ...registerDataFileTools(), ...registerMemoryTools(), registerRunSkillTool(), registerTerminalTool(), registerOpenPageTool()]) {
     if (tool) {
       context.subscriptions.push(tool);
     }

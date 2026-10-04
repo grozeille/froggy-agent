@@ -1,16 +1,53 @@
 import * as vscode from 'vscode';
-import { isAskAiMessage, isOpenLinkMessage } from './askAi';
+import {
+  appendActionLog,
+  formatActionLog,
+  stripAnsi,
+  type ActionLogEntry
+} from './actionLog';
+import { agentEnvironmentPreamble, historyGroundingHint, terminalToolHint } from './agentEnv';
+import {
+  isAskAiMessage,
+  isConfirmResultMessage,
+  isOpenActionLogMessage,
+  isOpenLinkMessage,
+  isStopMessage
+} from './askAi';
+import { formatSkillsHint, truncateOutput } from './skillRun';
+import { listRunnableSkills } from './skillRunTool';
 import { DATE_TIME_TOOL_NAME } from './dateTime';
+import { GOOGLE_SEARCH_TOOL_NAME } from './searchUrl';
+import { OPEN_PAGE_TOOL_NAME } from './openPage';
+import { APPEND_MEMORY_TOOL_NAME, READ_MEMORY_TOOL_NAME } from './memory';
+import { MODEL_SETTING_DEFAULT, MODEL_SETTING_KEY, pickChatModel } from './modelSelection';
 import { LIST_DATA_FILES_TOOL_NAME, READ_DATA_FILE_TOOL_NAME } from './dataFiles';
+import { RUN_SKILL_TOOL_NAME } from './skillRun';
+import {
+  CONFIRM_SETTING_DEFAULT,
+  CONFIRM_SETTING_KEY,
+  describeToolCall,
+  dropSupersededTerminalTools,
+  needsConfirmation,
+  resolveAgentTools,
+  summarizeToolInput,
+  TOOL_SETTING_DEFAULT,
+  TOOL_SETTING_KEY,
+  type ToolCallDescription
+} from './toolSelection';
+import { TERMINAL_TOOL_NAME } from './terminal';
 import { isSafeHttpUrl } from './urls';
 import { SessionStore } from './sessionStore';
 import {
+  declinedToolResultText,
+  isMainSession,
   MAX_HISTORY_MESSAGES,
   NEW_SESSION_TITLE,
   recentMessages,
   titleFromPrompt,
+  toReplayItems,
   withMessage,
-  type ChatSession
+  type ChatSession,
+  type ChatToolRun
 } from './sessions';
 
 export class AskAiPanel {
@@ -22,6 +59,10 @@ export class AskAiPanel {
   private readonly _store: SessionStore;
   private _sessionId: string;
   private _disposables: vscode.Disposable[] = [];
+  private _pendingConfirms = new Map<string, (approved: boolean) => void>();
+  private _confirmSeq = 0;
+  private _actionLogs = new Map<string, ActionLogEntry[]>();
+  private _askRuns = new Map<string, { source: vscode.CancellationTokenSource; cancelled: boolean }>();
 
   private constructor(
     panel: vscode.WebviewPanel,
@@ -42,6 +83,12 @@ export class AskAiPanel {
           await this._handleAsk(message.sessionId, message.prompt);
         } else if (isOpenLinkMessage(message)) {
           await this._handleOpenLink(message.url);
+        } else if (isConfirmResultMessage(message)) {
+          this._resolveConfirm(message.id, message.approved);
+        } else if (isOpenActionLogMessage(message)) {
+          await this._handleOpenActionLog(message.sessionId);
+        } else if (isStopMessage(message)) {
+          this._handleStop(message.sessionId);
         }
       },
       null,
@@ -79,6 +126,12 @@ export class AskAiPanel {
 
   public dispose(): void {
     AskAiPanel.currentPanel = undefined;
+    for (const run of this._askRuns.values()) {
+      run.cancelled = true;
+      run.source.cancel();
+    }
+    this._askRuns.clear();
+    this._denyPendingConfirms();
     this._panel.dispose();
     while (this._disposables.length) {
       const d = this._disposables.pop();
@@ -91,13 +144,104 @@ export class AskAiPanel {
     if (!session) {
       return;
     }
+    // Leaving a flow that waits for confirmation denies it: never run a
+    // sensitive tool the user walked away from.
+    this._denyPendingConfirms();
     this._sessionId = sessionId;
     this._updateTitle(session);
     await this._panel.webview.postMessage({
       command: 'transcript',
       sessionId,
-      messages: session.messages
+      messages: session.messages,
+      busy: this._askRuns.has(sessionId)
     });
+    await this._postEffectiveModel(sessionId);
+  }
+
+  /**
+   * Empty the open discussion's transcript (Clear), tool history included.
+   * Refused while an answer runs: clearing mid-run would race the run's own
+   * save, so Stop first.
+   */
+  public async clearSession(): Promise<void> {
+    const sessionId = this._sessionId;
+    if (this._askRuns.has(sessionId)) {
+      await vscode.window.showInformationMessage(
+        'Stop the current answer before clearing this discussion.'
+      );
+      return;
+    }
+    const cleared = await this._store.clear(sessionId);
+    if (!cleared) {
+      return;
+    }
+    this._actionLogs.delete(sessionId);
+    await this._showSession(sessionId);
+  }
+
+  /** Abort the in-flight ask for a session, if any. */
+  private _handleStop(sessionId: string): void {
+    const run = this._askRuns.get(sessionId);
+    if (run) {
+      run.cancelled = true;
+      run.source.cancel();
+    }
+    this._denyPendingConfirms();
+  }
+
+  private async _resolveModel(): Promise<vscode.LanguageModelChat> {
+    const models = await vscode.lm.selectChatModels();
+    const setting = vscode.workspace
+      .getConfiguration('poc-vscode-addin')
+      .get<string>(MODEL_SETTING_KEY, MODEL_SETTING_DEFAULT);
+    return pickChatModel(models, setting);
+  }
+
+  /** In-chat Continue/Cancel gate for sensitive tool calls. */
+  private async _confirmToolCall(
+    sessionId: string,
+    description: ToolCallDescription
+  ): Promise<boolean> {
+    const id = `confirm-${++this._confirmSeq}`;
+    await this._panel.webview.postMessage({
+      command: 'confirm',
+      sessionId,
+      id,
+      title: description.title,
+      detail: description.detail
+    });
+    return new Promise<boolean>((resolve) => {
+      this._pendingConfirms.set(id, resolve);
+    });
+  }
+
+  private _resolveConfirm(id: string, approved: boolean): void {
+    const resolve = this._pendingConfirms.get(id);
+    if (resolve) {
+      this._pendingConfirms.delete(id);
+      resolve(approved);
+    }
+  }
+
+  /** Deny anything still pending (session switch, panel close). */
+  private _denyPendingConfirms(): void {
+    for (const resolve of this._pendingConfirms.values()) {
+      resolve(false);
+    }
+    this._pendingConfirms.clear();
+  }
+
+  /** Refresh the panel badge; failures surface later when asking. */
+  private async _postEffectiveModel(sessionId: string): Promise<void> {
+    try {
+      if (!vscode.lm) {
+        return;
+      }
+      const model = await this._resolveModel();
+      await this._panel.webview.postMessage({ command: 'model', sessionId, name: model.name });
+    } catch {
+      // Leave the badge as-is; asking will report the problem.
+    }
   }
 
   private async _handleAsk(sessionId: string, prompt: string): Promise<void> {
@@ -111,40 +255,110 @@ export class AskAiPanel {
       return;
     }
     const text = prompt.trim();
-    if (session.messages.length === 0) {
+    if (session.messages.length === 0 && !isMainSession(session)) {
       session = { ...session, title: titleFromPrompt(text) };
     }
     session = withMessage(session, { role: 'user', text }, Date.now());
     await this._store.save(session);
     this._updateTitle(session);
-    await webview.postMessage({ command: 'status', sessionId, text: 'Processing your request...' });
+    await webview.postMessage({ command: 'status', sessionId, text: 'Thinking...' });
 
+    const run = { source: new vscode.CancellationTokenSource(), cancelled: false };
+    this._askRuns.set(sessionId, run);
+    const token = run.source.token;
+    let answer = '';
+    const toolRuns: ChatToolRun[] = [];
     try {
-      // No agent / tool / model picker: always the default model, tools run automatically.
+      // No agent / tool picker in the UI: model from the `poc-vscode-addin.model`
+      // setting (`auto` by default), tools run automatically.
       if (!vscode.lm) {
         throw new Error('Language models are not available in this version of VS Code.');
       }
-      const models = await vscode.lm.selectChatModels();
-      if (models.length === 0) {
-        throw new Error('No AI model available. Make sure Copilot is signed in.');
-      }
-      const model = models[0];
-      const token = new vscode.CancellationTokenSource().token;
-      // Agent mode: the model may call tools (date/time, data files). Calls run
-      // silently — the panel keeps showing "Processing your request...".
-      // File tools resolve paths inside <workspace>/data implicitly.
-      const agentTools = [DATE_TIME_TOOL_NAME, READ_DATA_FILE_TOOL_NAME, LIST_DATA_FILES_TOOL_NAME];
-      const tools = vscode.lm.tools.filter((tool) => agentTools.includes(tool.name));
-      const messages = recentMessages(session, MAX_HISTORY_MESSAGES).map((item) =>
-        item.role === 'assistant'
-          ? vscode.LanguageModelChatMessage.Assistant(item.text)
-          : vscode.LanguageModelChatMessage.User(item.text)
+      const model = await this._resolveModel();
+      await webview.postMessage({ command: 'model', sessionId, name: model.name });
+      // Agent mode: the model may call tools. Calls run silently — the panel
+      // keeps showing "Thinking...". Builtins (date/time, data
+      // files, browser, memory, skill runner, terminal runner) plus the
+      // extra names from the tools setting; file tools resolve paths inside
+      // <workspace>/data implicitly. External terminal tools are dropped
+      // when the builtin is available so a run never asks twice (in-chat
+      // card + native popup).
+      const builtinTools = [
+        DATE_TIME_TOOL_NAME,
+        READ_DATA_FILE_TOOL_NAME,
+        LIST_DATA_FILES_TOOL_NAME,
+        GOOGLE_SEARCH_TOOL_NAME,
+        OPEN_PAGE_TOOL_NAME,
+        READ_MEMORY_TOOL_NAME,
+        APPEND_MEMORY_TOOL_NAME,
+        RUN_SKILL_TOOL_NAME,
+        TERMINAL_TOOL_NAME
+      ];
+      const config = vscode.workspace.getConfiguration('poc-vscode-addin');
+      const extraNames = config.get<string[]>(TOOL_SETTING_KEY, [...TOOL_SETTING_DEFAULT]);
+      const tools = dropSupersededTerminalTools(
+        resolveAgentTools(vscode.lm.tools, builtinTools, extraNames ?? []),
+        TERMINAL_TOOL_NAME
       );
-      let answer = '';
+      const confirmList =
+        config.get<string[]>(CONFIRM_SETTING_KEY, [...CONFIRM_SETTING_DEFAULT]) ?? [];
+      // Unsaved preamble: OS/shell match + default to the terminal tool
+      // (only named when actually offered) + do-not-redo grounding +
+      // runnable skill catalog (so matching requests route to the skill
+      // runner instead of the terminal).
+      const offeredNames = tools.map((tool) => tool.name);
+      const skillsHint = offeredNames.includes(RUN_SKILL_TOOL_NAME)
+        ? formatSkillsHint(await listRunnableSkills(), RUN_SKILL_TOOL_NAME)
+        : '';
+      const preamble =
+        agentEnvironmentPreamble() +
+        terminalToolHint(offeredNames) +
+        historyGroundingHint() +
+        skillsHint;
+      // History replays past tool rounds (calls + results, as in the live
+      // loop) — without them the model cannot tell previous turns' actions
+      // were already performed and redoes them on every new question.
+      const messages: vscode.LanguageModelChatMessage[] = [
+        vscode.LanguageModelChatMessage.User(preamble)
+      ];
+      for (const item of toReplayItems(recentMessages(session, MAX_HISTORY_MESSAGES))) {
+        if (item.kind === 'toolRound') {
+          messages.push(
+            vscode.LanguageModelChatMessage.Assistant(
+              item.calls.map(
+                (call) => new vscode.LanguageModelToolCallPart(call.callId, call.tool, call.input)
+              )
+            )
+          );
+          messages.push(
+            vscode.LanguageModelChatMessage.User(
+              item.calls.map(
+                (call) =>
+                  new vscode.LanguageModelToolResultPart(call.callId, [
+                    new vscode.LanguageModelTextPart(call.resultText)
+                  ])
+              )
+            )
+          );
+        } else if (item.kind === 'assistant') {
+          messages.push(vscode.LanguageModelChatMessage.Assistant(item.text));
+        } else {
+          messages.push(vscode.LanguageModelChatMessage.User(item.text));
+        }
+      }
+      let ranTools = false;
       for (let turn = 0; turn < 5; turn++) {
+        // Never trust the provider to honor cancellation: check explicitly so
+        // Stop works even when the stream keeps yielding after cancel.
+        if (run.cancelled) {
+          break;
+        }
         const response = await model.sendRequest(messages, { tools }, token);
         const toolCalls: vscode.LanguageModelToolCallPart[] = [];
         for await (const part of response.stream) {
+          if (run.cancelled) {
+            break;
+          }
           if (part instanceof vscode.LanguageModelTextPart) {
             answer += part.value;
             await webview.postMessage({ command: 'chunk', sessionId, text: part.value });
@@ -152,36 +366,125 @@ export class AskAiPanel {
             toolCalls.push(part);
           }
         }
+        if (run.cancelled) {
+          break;
+        }
         if (toolCalls.length === 0) {
           break;
         }
         const toolResults: vscode.LanguageModelToolResultPart[] = [];
         for (const call of toolCalls) {
+          ranTools = true;
+          const inputSummary = summarizeToolInput(call.input, 300);
+          const gated = needsConfirmation(call.name, confirmList);
+          let decision: ActionLogEntry['decision'] = gated ? 'approved' : 'auto';
+          let output: string | undefined;
           try {
+            if (gated) {
+              const description = describeToolCall(call.name, call.input, 300);
+              await webview.postMessage({
+                command: 'status',
+                sessionId,
+                text: `Waiting for confirmation: ${description.title}`
+              });
+              const allowed = await this._confirmToolCall(sessionId, description);
+              if (!allowed) {
+                decision = 'declined';
+                toolResults.push(
+                  new vscode.LanguageModelToolResultPart(call.callId, [
+                    new vscode.LanguageModelTextPart(declinedToolResultText(call.name))
+                  ])
+                );
+                toolRuns.push({ tool: call.name, input: call.input, decision });
+                this._recordAction(sessionId, {
+                  at: Date.now(),
+                  tool: call.name,
+                  input: inputSummary,
+                  decision,
+                  output
+                });
+                continue;
+              }
+            }
             const result = await vscode.lm.invokeTool(
               call.name,
               { input: call.input, toolInvocationToken: undefined },
               token
             );
+            output = truncateOutput(stripAnsi(toolResultText(result.content)), 2000);
             toolResults.push(new vscode.LanguageModelToolResultPart(call.callId, result.content));
+            toolRuns.push({ tool: call.name, input: call.input, output, decision });
           } catch (err) {
             const message = err instanceof Error ? err.message : String(err);
+            output = `Error: ${message}`;
             toolResults.push(
               new vscode.LanguageModelToolResultPart(call.callId, [
                 new vscode.LanguageModelTextPart(`Tool failed: ${message}`)
               ])
             );
+            toolRuns.push({ tool: call.name, input: call.input, output, decision });
           }
+          this._recordAction(sessionId, {
+            at: Date.now(),
+            tool: call.name,
+            input: inputSummary,
+            decision,
+            output
+          });
         }
         messages.push(vscode.LanguageModelChatMessage.Assistant(toolCalls));
         messages.push(vscode.LanguageModelChatMessage.User(toolResults));
       }
-      await this._store.save(withMessage(session, { role: 'assistant', text: answer }, Date.now()));
+      if (ranTools) {
+        await webview.postMessage({ command: 'actionLog', sessionId });
+      }
+      await this._store.save(
+        withMessage(
+          session,
+          { role: 'assistant', text: answer, toolRuns: toolRuns.length > 0 ? toolRuns : undefined },
+          Date.now()
+        )
+      );
       await webview.postMessage({ command: 'done', sessionId });
     } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      await webview.postMessage({ command: 'error', sessionId, message });
+      if (run.cancelled || err instanceof vscode.CancellationError) {
+        // Stopped by the user: keep the partial answer, re-enable input.
+        if (answer.length > 0) {
+          await this._store.save(
+            withMessage(
+              session,
+              {
+                role: 'assistant',
+                text: answer,
+                toolRuns: toolRuns.length > 0 ? toolRuns : undefined
+              },
+              Date.now()
+            )
+          );
+        }
+        await webview.postMessage({ command: 'done', sessionId });
+      } else {
+        const message = err instanceof Error ? err.message : String(err);
+        await webview.postMessage({ command: 'error', sessionId, message });
+      }
+    } finally {
+      if (this._askRuns.get(sessionId) === run) {
+        this._askRuns.delete(sessionId);
+      }
     }
+  }
+
+  private _recordAction(sessionId: string, entry: ActionLogEntry): void {
+    this._actionLogs.set(
+      sessionId,
+      appendActionLog(this._actionLogs.get(sessionId) ?? [], entry)
+    );
+  }
+
+  private async _handleOpenActionLog(sessionId: string): Promise<void> {
+    const content = formatActionLog(this._actionLogs.get(sessionId) ?? []);
+    const doc = await vscode.workspace.openTextDocument({ content, language: 'plaintext' });
+    await vscode.window.showTextDocument(doc, { preview: false });
   }
 
   private async _handleOpenLink(url: string): Promise<void> {
@@ -220,6 +523,9 @@ export class AskAiPanel {
     <p id="status" class="status" role="status" hidden></p>
     <form id="ask-form">
       <textarea id="prompt" rows="3" placeholder="Ask a question... (Enter to send, Shift+Enter for a new line)" aria-label="Your question"></textarea>
+      <div class="form-row">
+        <button type="button" id="stop" disabled>Stop</button>
+      </div>
     </form>
   </main>
   <script nonce="${nonce}" src="${markdownUri}"></script>
@@ -227,6 +533,12 @@ export class AskAiPanel {
 </body>
 </html>`;
   }
+}
+
+function toolResultText(content: vscode.LanguageModelToolResult['content']): string {
+  return content
+    .map((part) => (part instanceof vscode.LanguageModelTextPart ? part.value : '[non-text part]'))
+    .join('');
 }
 
 function getNonce(): string {

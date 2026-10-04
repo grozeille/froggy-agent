@@ -1,0 +1,86 @@
+import * as assert from 'assert';
+import * as vscode from 'vscode';
+import { SessionStore } from '../../sessionStore';
+import {
+  MAIN_SESSION_ID,
+  MAIN_SESSION_TITLE,
+  NEW_SESSION_TITLE,
+  withMessage
+} from '../../sessions';
+
+function fakeMemento(): vscode.Memento {
+  const backing = new Map<string, unknown>();
+  return {
+    keys: () => [...backing.keys()],
+    get: <T,>(key: string, defaultValue?: T): T => {
+      return (backing.has(key) ? backing.get(key) : defaultValue) as T;
+    },
+    update: async (key: string, value: unknown): Promise<void> => {
+      backing.set(key, value);
+    }
+  };
+}
+
+suite('SessionStore main chat', () => {
+  test('getOrCreateMain creates the main session once', async () => {
+    const store = new SessionStore(fakeMemento());
+    try {
+      const first = await store.getOrCreateMain();
+      assert.strictEqual(first.id, MAIN_SESSION_ID);
+      assert.strictEqual(first.title, MAIN_SESSION_TITLE);
+      const second = await store.getOrCreateMain();
+      assert.strictEqual(second.id, MAIN_SESSION_ID);
+      assert.strictEqual(store.get(MAIN_SESSION_ID)?.title, MAIN_SESSION_TITLE);
+    } finally {
+      store.dispose();
+    }
+  });
+
+  test('list excludes the main session', async () => {
+    const store = new SessionStore(fakeMemento());
+    try {
+      const main = await store.getOrCreateMain();
+      await store.save(withMessage(main, { role: 'user', text: 'hi' }, Date.now()));
+      const regular = await store.create();
+      await store.save(withMessage(regular, { role: 'user', text: 'hello' }, Date.now()));
+      const ids = store.list().map((session) => session.id);
+      assert.ok(!ids.includes(MAIN_SESSION_ID), 'main session should not be listed');
+      assert.ok(ids.includes(regular.id), 'regular sessions should still be listed');
+    } finally {
+      store.dispose();
+    }
+  });
+
+  test('create preserves an empty main session', async () => {
+    const store = new SessionStore(fakeMemento());
+    try {
+      await store.getOrCreateMain();
+      await store.create();
+      await store.create();
+      assert.ok(store.get(MAIN_SESSION_ID), 'empty main session should survive create()');
+      assert.strictEqual(store.list().length, 1, 'only one empty regular session is kept');
+    } finally {
+      store.dispose();
+    }
+  });
+
+  test('clear empties the transcript and resets the title', async () => {
+    const store = new SessionStore(fakeMemento());
+    try {
+      const regular = await store.create();
+      await store.save(withMessage(regular, { role: 'user', text: 'hello' }, Date.now()));
+      const cleared = await store.clear(regular.id);
+      assert.ok(cleared);
+      assert.deepStrictEqual(cleared.messages, []);
+      assert.strictEqual(cleared.title, NEW_SESSION_TITLE);
+      assert.deepStrictEqual(store.get(regular.id)?.messages, []);
+      const main = await store.getOrCreateMain();
+      await store.save(withMessage(main, { role: 'user', text: 'hi' }, Date.now()));
+      const clearedMain = await store.clear(main.id);
+      assert.strictEqual(clearedMain?.title, MAIN_SESSION_TITLE);
+      assert.strictEqual(await store.clear('missing'), undefined);
+    } finally {
+      store.dispose();
+    }
+  });
+});

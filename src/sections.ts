@@ -1,3 +1,3 @@
-export const NEW_DISCUSSION_LABEL = 'New discussion';
+export const MAIN_CHAT_LABEL = 'Main chat';
 
 export const MEMORY_FILE_NAME = 'memory.md';

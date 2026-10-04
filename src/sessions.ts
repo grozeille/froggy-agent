@@ -1,6 +1,74 @@
+import type { ActionLogEntry } from './actionLog';
+
+/** One tool run attached to an assistant message, replayed as history. */
+export interface ChatToolRun {
+  tool: string;
+  input: unknown;
+  output?: string;
+  decision: ActionLogEntry['decision'];
+}
+
 export interface ChatMessage {
   role: 'user' | 'assistant';
   text: string;
+  /** Past tool runs (assistant messages only), replayed so actions are not redone. */
+  toolRuns?: ChatToolRun[];
+}
+
+/** Result text sent to the model when the user declines a tool call. */
+export function declinedToolResultText(toolName: string): string {
+  return (
+    `The user declined to run the "${toolName}" tool. ` +
+    `Do not retry it; continue without it or ask the user.`
+  );
+}
+
+export interface ReplayToolCall {
+  callId: string;
+  tool: string;
+  input: object;
+  resultText: string;
+}
+
+export type ReplayItem =
+  | { kind: 'user'; text: string }
+  | { kind: 'assistant'; text: string }
+  | { kind: 'toolRound'; calls: ReplayToolCall[] };
+
+function replayResultText(run: ChatToolRun): string {
+  if (run.decision === 'declined') {
+    return declinedToolResultText(run.tool);
+  }
+  return run.output ?? '(no output)';
+}
+
+/**
+ * Expand stored messages into replay items: an assistant message carrying
+ * past tool runs expands to a tool round (calls + results, as in the live
+ * loop) followed by the final text — so the model sees what it already did
+ * instead of redoing previous turns' actions on every new question.
+ */
+export function toReplayItems(messages: ChatMessage[]): ReplayItem[] {
+  const items: ReplayItem[] = [];
+  messages.forEach((message, index) => {
+    if (message.role === 'assistant' && message.toolRuns && message.toolRuns.length > 0) {
+      items.push({
+        kind: 'toolRound',
+        calls: message.toolRuns.map((run, runIndex) => ({
+          callId: `hist-${index}-${runIndex}`,
+          tool: run.tool,
+          input: typeof run.input === 'object' && run.input !== null ? run.input : {},
+          resultText: replayResultText(run)
+        }))
+      });
+    }
+    if (message.role === 'assistant') {
+      items.push({ kind: 'assistant', text: message.text });
+    } else {
+      items.push({ kind: 'user', text: message.text });
+    }
+  });
+  return items;
 }
 
 export interface ChatSession {
@@ -12,6 +80,10 @@ export interface ChatSession {
 }
 
 export const NEW_SESSION_TITLE = 'New discussion';
+
+/** Fixed id and title of the special main chat session. */
+export const MAIN_SESSION_ID = 'main';
+export const MAIN_SESSION_TITLE = 'Main chat';
 
 /** How many recent messages are sent back to the model for context. */
 export const MAX_HISTORY_MESSAGES = 20;
@@ -27,6 +99,14 @@ export function createSession(id: string, now: number): ChatSession {
   return { id, title: NEW_SESSION_TITLE, messages: [], createdAt: now, updatedAt: now };
 }
 
+export function createMainSession(now: number): ChatSession {
+  return { id: MAIN_SESSION_ID, title: MAIN_SESSION_TITLE, messages: [], createdAt: now, updatedAt: now };
+}
+
+export function isMainSession(session: ChatSession): boolean {
+  return session.id === MAIN_SESSION_ID;
+}
+
 /** Derive a short title from the first question: first line, max 40 chars. */
 export function titleFromPrompt(prompt: string): string {
   const firstLine = prompt.split(/\r?\n/, 1)[0]?.trim() ?? '';
@@ -39,4 +119,14 @@ export function titleFromPrompt(prompt: string): string {
 
 export function withMessage(session: ChatSession, message: ChatMessage, now: number): ChatSession {
   return { ...session, messages: [...session.messages, message], updatedAt: now };
+}
+
+/** Empty a session's transcript (Clear): title resets, except for main chat. */
+export function clearedSession(session: ChatSession, now: number): ChatSession {
+  return {
+    ...session,
+    title: isMainSession(session) ? session.title : NEW_SESSION_TITLE,
+    messages: [],
+    updatedAt: now
+  };
 }
