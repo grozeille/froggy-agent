@@ -89,12 +89,18 @@
       if (!assistantEl) {
         assistantEl = appendMessage('assistant', '');
         assistantRaw = '';
+      } else if (assistantEl.nextSibling) {
+        // Cards (questions, confirmations, log links) posted after the
+        // bubble stay above it: the running answer always renders last.
+        conversationEl.appendChild(assistantEl);
       }
       assistantRaw += message.text;
       renderAssistant(assistantEl, assistantRaw);
       scrollToBottom();
     } else if (message.command === 'confirm') {
       appendConfirm(message.id, message.title, message.detail);
+    } else if (message.command === 'question') {
+      appendQuestion(message.id, message.questions);
     } else if (message.command === 'actionLog') {
       appendActionLink();
     } else if (message.command === 'done') {
@@ -156,6 +162,75 @@
     if (detail) {
       div.appendChild(code);
     }
+    div.appendChild(row);
+    conversationEl.appendChild(div);
+    scrollToBottom();
+  }
+
+  function appendQuestion(id, questions) {
+    const div = document.createElement('div');
+    div.className = 'message question';
+    const list = Array.isArray(questions) ? questions : [];
+    const rows = [];
+    for (const item of list) {
+      const q = item && typeof item === 'object' ? item : {};
+      const wrap = document.createElement('div');
+      wrap.className = 'question-item';
+      const label = document.createElement('div');
+      label.className = 'question-text';
+      label.textContent = typeof q.question === 'string' && q.question ? q.question : 'Question';
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'question-input';
+      input.placeholder = 'Type your answer...';
+      wrap.appendChild(label);
+      const options = Array.isArray(q.options) ? q.options.filter((o) => typeof o === 'string' && o) : [];
+      if (options.length > 0) {
+        const opts = document.createElement('div');
+        opts.className = 'question-options';
+        for (const opt of options) {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.textContent = opt;
+          btn.className = 'question-option';
+          btn.addEventListener('click', () => {
+            input.value = opt;
+            const siblings = opts.querySelectorAll('.question-option');
+            for (const s of siblings) {
+              s.classList.remove('selected');
+            }
+            btn.classList.add('selected');
+          });
+          opts.appendChild(btn);
+        }
+        wrap.appendChild(opts);
+      }
+      wrap.appendChild(input);
+      div.appendChild(wrap);
+      rows.push({ id: typeof q.id === 'string' && q.id ? q.id : '', input: input });
+    }
+    const row = document.createElement('div');
+    row.className = 'confirm-actions';
+    const send = document.createElement('button');
+    send.textContent = 'Send';
+    send.className = 'confirm-ok';
+    const cancel = document.createElement('button');
+    cancel.textContent = 'Cancel';
+    cancel.className = 'confirm-ko';
+    const done = (answers) => {
+      const controls = div.querySelectorAll('button, input');
+      for (const c of controls) {
+        c.disabled = true;
+      }
+      div.classList.add(answers ? 'answered' : 'denied');
+      vscode.postMessage({ command: 'answerResult', id: id, answers: answers });
+    };
+    send.addEventListener('click', () => {
+      done(rows.map((r) => ({ id: r.id, value: r.input.value || '' })));
+    });
+    cancel.addEventListener('click', () => done(null));
+    row.appendChild(send);
+    row.appendChild(cancel);
     div.appendChild(row);
     conversationEl.appendChild(div);
     scrollToBottom();

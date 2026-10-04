@@ -1,9 +1,13 @@
 import * as vscode from 'vscode';
 import {
+  archivedSessions,
   clearedSession,
   createMainSession,
   createSession,
+  isArchived,
   isMainSession,
+  liveSessions,
+  withArchived,
   type ChatSession
 } from './sessions';
 
@@ -22,11 +26,14 @@ export class SessionStore implements vscode.Disposable {
     this._emitter.dispose();
   }
 
-  /** Most recently updated first, excluding the special main chat session. */
+  /** Live sessions: most recently updated first, main chat and archived excluded. */
   public list(): ChatSession[] {
-    return [...this._sessions]
-      .filter((s) => !isMainSession(s))
-      .sort((a, b) => b.updatedAt - a.updatedAt);
+    return liveSessions(this._sessions);
+  }
+
+  /** Archived sessions, most recently updated first, main chat excluded. */
+  public listArchived(): ChatSession[] {
+    return archivedSessions(this._sessions);
   }
 
   public get(id: string): ChatSession | undefined {
@@ -47,11 +54,32 @@ export class SessionStore implements vscode.Disposable {
   public async create(): Promise<ChatSession> {
     // Drop untouched sessions so the list never fills with empty entries.
     // The main chat is special: it is never listed and never dropped.
-    this._sessions = this._sessions.filter((s) => s.messages.length > 0 || isMainSession(s));
+    // Archived sessions are kept even when empty: archiving is explicit.
+    this._sessions = this._sessions.filter(
+      (s) => s.messages.length > 0 || isMainSession(s) || isArchived(s)
+    );
     const session = createSession(newSessionId(), Date.now());
     this._sessions.push(session);
     await this._persist();
     return session;
+  }
+
+  /** Move a session to the archive; unknown ids and the main chat are ignored. */
+  public async archive(id: string): Promise<void> {
+    const session = this.get(id);
+    if (!session || isMainSession(session)) {
+      return;
+    }
+    await this.save(withArchived(session, true));
+  }
+
+  /** Move an archived session back to the live list; unknown ids are ignored. */
+  public async restore(id: string): Promise<void> {
+    const session = this.get(id);
+    if (!session) {
+      return;
+    }
+    await this.save(withArchived(session, false));
   }
 
   public async save(session: ChatSession): Promise<void> {

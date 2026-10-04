@@ -51,3 +51,16 @@ export function terminalToolHint(offeredToolNames: readonly string[]): string {
     `call the "${name}" tool with the command instead of answering from knowledge.`
   );
 }
+
+/**
+ * Clarification nudge, appended to every request: vague requests get one
+ * short question instead of a guess — but only when the missing detail
+ * actually changes the result, so obvious cases stay one-step answers.
+ */
+export function clarificationHint(): string {
+  return (
+    ' If the request is ambiguous in a way that changes the result (which file,' +
+    ' how many items, what scope), ask one short clarifying question instead of' +
+    ' guessing. Do not ask when the answer would not change what you do.'
+  );
+}

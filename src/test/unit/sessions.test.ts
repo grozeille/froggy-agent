@@ -1,20 +1,27 @@
 import * as assert from 'assert';
 import {
+  ARCHIVED_SESSION_CONTEXT_VALUE,
+  archivedSessions,
   clearedSession,
   createMainSession,
   createSession,
   declinedToolResultText,
+  isArchived,
   isMainSession,
+  liveSessions,
   MAIN_SESSION_ID,
   MAIN_SESSION_TITLE,
   MAX_HISTORY_MESSAGES,
   NEW_SESSION_TITLE,
   recentMessages,
+  SESSION_CONTEXT_VALUE,
   titleFromPrompt,
   toReplayItems,
+  withArchived,
   withMessage,
   type ChatSession
 } from '../../sessions';
+import { ARCHIVE_CONTEXT_VALUE } from '../../archive';
 
 suite('sessions', () => {
   test('createSession starts untitled and empty', () => {
@@ -202,6 +209,50 @@ suite('sessions', () => {
     assert.strictEqual(cleared.title, NEW_SESSION_TITLE);
     assert.strictEqual(cleared.updatedAt, 2000);
     assert.strictEqual(cleared.createdAt, 1000);
+  });
+
+  test('isArchived is false when the flag is missing', () => {
+    assert.strictEqual(isArchived(createSession('abc', 1000)), false);
+    assert.strictEqual(isArchived(createMainSession(1000)), false);
+  });
+
+  test('withArchived flags without touching the rest', () => {
+    let session = createSession('abc', 1000);
+    session = withMessage(session, { role: 'user', text: 'hi' }, 1001);
+    const archived = withArchived(session, true);
+    assert.strictEqual(session.archived, undefined);
+    assert.strictEqual(archived.archived, true);
+    assert.strictEqual(isArchived(archived), true);
+    assert.strictEqual(isArchived(withArchived(archived, false)), false);
+    assert.strictEqual(archived.updatedAt, 1001);
+    assert.strictEqual(archived.messages.length, 1);
+  });
+
+  test('liveSessions and archivedSessions split, exclude main, newest first', () => {
+    const main = createMainSession(1000);
+    const old = withMessage(createSession('old', 1000), { role: 'user', text: 'o' }, 1001);
+    const mid = withArchived(
+      withMessage(createSession('mid', 1000), { role: 'user', text: 'm' }, 1002),
+      true
+    );
+    const fresh = withMessage(createSession('fresh', 1000), { role: 'user', text: 'f' }, 1003);
+    const all = [old, main, fresh, mid];
+    assert.deepStrictEqual(
+      liveSessions(all).map((s) => s.id),
+      ['fresh', 'old']
+    );
+    assert.deepStrictEqual(
+      archivedSessions(all).map((s) => s.id),
+      ['mid']
+    );
+  });
+
+  test('session context values are distinct so menus target the right nodes', () => {
+    assert.strictEqual(SESSION_CONTEXT_VALUE, 'session');
+    assert.strictEqual(ARCHIVED_SESSION_CONTEXT_VALUE, 'archivedSession');
+    assert.notStrictEqual(SESSION_CONTEXT_VALUE, ARCHIVED_SESSION_CONTEXT_VALUE);
+    assert.notStrictEqual(ARCHIVE_CONTEXT_VALUE, SESSION_CONTEXT_VALUE);
+    assert.notStrictEqual(ARCHIVE_CONTEXT_VALUE, ARCHIVED_SESSION_CONTEXT_VALUE);
   });
 
   test('clearedSession keeps the main chat title', () => {

@@ -77,6 +77,8 @@ export interface ChatSession {
   messages: ChatMessage[];
   createdAt: number;
   updatedAt: number;
+  /** Set while the session sits in the Archive node; absent on old records. */
+  archived?: boolean;
 }
 
 export const NEW_SESSION_TITLE = 'New discussion';
@@ -84,6 +86,10 @@ export const NEW_SESSION_TITLE = 'New discussion';
 /** Fixed id and title of the special main chat session. */
 export const MAIN_SESSION_ID = 'main';
 export const MAIN_SESSION_TITLE = 'Main chat';
+
+/** Tree item context values driving the Sessions view menus. */
+export const SESSION_CONTEXT_VALUE = 'session';
+export const ARCHIVED_SESSION_CONTEXT_VALUE = 'archivedSession';
 
 /** How many recent messages are sent back to the model for context. */
 export const MAX_HISTORY_MESSAGES = 20;
@@ -105,6 +111,30 @@ export function createMainSession(now: number): ChatSession {
 
 export function isMainSession(session: ChatSession): boolean {
   return session.id === MAIN_SESSION_ID;
+}
+
+/** Whether the session sits in the Archive node (old records lack the flag). */
+export function isArchived(session: ChatSession): boolean {
+  return session.archived === true;
+}
+
+/** Flag a session as archived/live, keeping its messages and timestamps. */
+export function withArchived(session: ChatSession, archived: boolean): ChatSession {
+  return { ...session, archived };
+}
+
+/** Live sessions, most recently updated first, main chat excluded. */
+export function liveSessions(sessions: readonly ChatSession[]): ChatSession[] {
+  return [...sessions]
+    .filter((s) => !isMainSession(s) && !isArchived(s))
+    .sort((a, b) => b.updatedAt - a.updatedAt);
+}
+
+/** Archived sessions, most recently updated first, main chat excluded. */
+export function archivedSessions(sessions: readonly ChatSession[]): ChatSession[] {
+  return [...sessions]
+    .filter((s) => !isMainSession(s) && isArchived(s))
+    .sort((a, b) => b.updatedAt - a.updatedAt);
 }
 
 /** Derive a short title from the first question: first line, max 40 chars. */

@@ -30,7 +30,7 @@
       "activitybar": [
         {
           "id": "pocSidebar",
-          "title": "POC",
+          "title": "Froggy Agent",
           "icon": "media/icon.svg"
         }
       ]
@@ -137,6 +137,36 @@
         "title": "New Folder",
         "category": "POC",
         "icon": "$(new-folder)"
+      },
+      {
+        "command": "poc-vscode-addin.deleteSkill",
+        "title": "Delete",
+        "category": "POC"
+      },
+      {
+        "command": "poc-vscode-addin.restoreSkill",
+        "title": "Restore",
+        "category": "POC"
+      },
+      {
+        "command": "poc-vscode-addin.deleteSkillPermanently",
+        "title": "Delete Permanently",
+        "category": "POC"
+      },
+      {
+        "command": "poc-vscode-addin.deleteSession",
+        "title": "Delete",
+        "category": "POC"
+      },
+      {
+        "command": "poc-vscode-addin.restoreSession",
+        "title": "Restore",
+        "category": "POC"
+      },
+      {
+        "command": "poc-vscode-addin.deleteSessionPermanently",
+        "title": "Delete Permanently",
+        "category": "POC"
       }
     ],
     "menus": {
@@ -217,6 +247,36 @@
           "command": "poc-vscode-addin.copyRelativePath",
           "when": "view == pocFilesView && (viewItem == dataFile || viewItem == dataFolder)",
           "group": "3_paths"
+        },
+        {
+          "command": "poc-vscode-addin.deleteSkill",
+          "when": "view == pocSkillsView && viewItem == skill",
+          "group": "2_modify"
+        },
+        {
+          "command": "poc-vscode-addin.restoreSkill",
+          "when": "view == pocSkillsView && viewItem == archivedSkill",
+          "group": "2_modify"
+        },
+        {
+          "command": "poc-vscode-addin.deleteSkillPermanently",
+          "when": "view == pocSkillsView && viewItem == archivedSkill",
+          "group": "2_modify"
+        },
+        {
+          "command": "poc-vscode-addin.deleteSession",
+          "when": "view == pocSessionsView && viewItem == session",
+          "group": "2_modify"
+        },
+        {
+          "command": "poc-vscode-addin.restoreSession",
+          "when": "view == pocSessionsView && viewItem == archivedSession",
+          "group": "2_modify"
+        },
+        {
+          "command": "poc-vscode-addin.deleteSessionPermanently",
+          "when": "view == pocSessionsView && viewItem == archivedSession",
+          "group": "2_modify"
         }
       ],
       "view/context": [
@@ -271,6 +331,30 @@
         },
         {
           "command": "poc-vscode-addin.newFolder",
+          "when": "never"
+        },
+        {
+          "command": "poc-vscode-addin.deleteSkill",
+          "when": "never"
+        },
+        {
+          "command": "poc-vscode-addin.restoreSkill",
+          "when": "never"
+        },
+        {
+          "command": "poc-vscode-addin.deleteSkillPermanently",
+          "when": "never"
+        },
+        {
+          "command": "poc-vscode-addin.deleteSession",
+          "when": "never"
+        },
+        {
+          "command": "poc-vscode-addin.restoreSession",
+          "when": "never"
+        },
+        {
+          "command": "poc-vscode-addin.deleteSessionPermanently",
           "when": "never"
         }
       ]
@@ -331,7 +415,7 @@
         "name": "pocRunSkill",
         "displayName": "Run Skill Script",
         "userDescription": "Run a skill's pre-designed Python script.",
-        "modelDescription": "Runs a pre-designed Python script for a workspace skill: <workspace>/.github/skills/<skill>/run.py. The skill is the skill folder name; pass an empty skill to list the runnable skills (with their titles) instead of running one. Optional args are passed to the script; paths inside args are relative to the workspace root (e.g. \"data/notes.md\"). Scripts run with the workspace .venv interpreter when present, else PATH python, with a 60s timeout. Use when the user asks to run a skill, or when a skill matches the request.",
+        "modelDescription": "Runs a pre-designed Python script for a workspace skill: <workspace>/.github/skills/<skill>/run.py. The skill is the skill folder name; pass an empty skill to list the runnable skills (with their titles) instead of running one. Optional args are passed to the script; paths inside args are relative to the workspace root (e.g. \"data/notes.md\"). Scripts run with the workspace .venv interpreter when present, else PATH python, with a 60s timeout. A skill shipping requirements.txt gets it installed into the workspace .venv (created when missing) before running. Use when the user asks to run a skill, or when a skill matches the request.",
         "canBeReferencedInPrompt": true,
         "toolReferenceName": "runSkill",
         "inputSchema": {
@@ -350,6 +434,70 @@
             }
           },
           "required": ["skill"],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "pocCreateSkill",
+        "displayName": "Create Skill",
+        "userDescription": "Build a new workspace skill (SKILL.md plus a Python run.py script) for a task.",
+        "modelDescription": "Delegates to a dedicated Python-developer agent that builds a new runnable workspace skill (.github/skills/<name>/SKILL.md plus run.py) automating the given task as a command-line Python script. Use when the user asks to create, add or generate a skill, or to automate a recurring task for reuse. The skill name is optional: pass a short lowercase slug (letters, digits, hyphens) or omit it to derive one from the task. The new skill is syntax-checked and immediately runnable via the skill runner. The factory always implements the skill as a Python script: describe the goal and expected output in the task, not an implementation. Third-party needs are declared in requirements.txt and installed at run time.",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "createSkill",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "task": {
+              "type": "string",
+              "description": "What the new skill should automate, e.g. \"summarize a data file in three bullet points\". Describe the goal and expected output, not an implementation."
+            },
+            "skill": {
+              "type": "string",
+              "description": "Short lowercase skill folder name (letters, digits, hyphens). Omit to derive one from the task."
+            }
+          },
+          "required": ["task"],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "pocAskQuestions",
+        "displayName": "Ask User Questions",
+        "userDescription": "Ask the user up to 4 questions with options.",
+        "modelDescription": "Asks the user up to 4 questions (each with optional options) and returns their answers. Use when a value you need is missing or ambiguous — a file, a count, a scope, a choice — instead of guessing. Prefer concrete options the user can click. Never ask about things you can find out with your other tools or from the conversation.",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "askQuestions",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "questions": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "description": "Short question id echoed back with the answer."
+                  },
+                  "question": {
+                    "type": "string",
+                    "description": "The question to ask the user."
+                  },
+                  "options": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Clickable options. Omit for a free-text answer."
+                  }
+                },
+                "required": ["question"],
+                "additionalProperties": false
+              },
+              "description": "Up to 4 questions for the user."
+            }
+          },
+          "required": ["questions"],
           "additionalProperties": false
         }
       },
@@ -471,7 +619,8 @@
             "pocRunTerminal",
             "run_in_terminal",
             "send_to_terminal",
-            "pocRunSkill"
+            "pocRunSkill",
+            "pocCreateSkill"
           ],
           "description": "Tool names asking for a Continue/Cancel confirmation before running. Reads outside the workspace data folder are only possible through these tools. Empty array disables confirmation. The builtin pocRunTerminal replaces run_in_terminal/send_to_terminal, which would also show VS Code's own popup on top of the in-chat card."
         }

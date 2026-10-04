@@ -13,15 +13,17 @@ export const TOOL_SETTING_DEFAULT: readonly string[] = [];
 export const CONFIRM_SETTING_KEY = 'confirmTools';
 
 /**
- * Tools asking for confirmation before running: terminal execution and the
- * skill runner (model-chosen skill + args). Reads outside `<workspace>/data`
- * are only possible through these, so gating them covers that too.
+ * Tools asking for confirmation before running: terminal execution, the
+ * skill runner (model-chosen skill + args) and the skill factory (new
+ * files on disk). Reads outside `<workspace>/data` are only possible
+ * through these, so gating them covers that too.
  */
 export const CONFIRM_SETTING_DEFAULT: readonly string[] = [
   'pocRunTerminal',
   'run_in_terminal',
   'send_to_terminal',
-  'pocRunSkill'
+  'pocRunSkill',
+  'pocCreateSkill'
 ];
 
 /**
@@ -86,8 +88,9 @@ function truncateDetail(text: string, maxChars: number): string {
 /**
  * Describe a gated tool call for the in-chat confirmation card. Terminal
  * tools show the command plus the model's explanation (the popup summary,
- * without the popup); the skill runner shows the skill and its arguments;
- * anything else falls back to the tool name with a JSON summary.
+ * without the popup); the skill runner shows the skill and its arguments,
+ * the skill factory the new skill and its task; anything else falls back
+ * to the tool name with a JSON summary.
  */
 export function describeToolCall(
   toolName: string,
@@ -114,6 +117,24 @@ export function describeToolCall(
     }
     return {
       title: `Run the "${skill}" skill?`,
+      detail: truncateDetail(lines.join('\n'), maxChars)
+    };
+  }
+  if (toolName === 'pocCreateSkill') {
+    const skill = stringField(input, ['skill']);
+    const task = stringField(input, ['task']);
+    const lines: string[] = [];
+    if (skill) {
+      lines.push(`Skill: ${skill}`);
+    }
+    if (task) {
+      lines.push(`Task: ${task}`);
+    }
+    if (lines.length === 0) {
+      return { title: 'Create a new skill?', detail: summarizeToolInput(input, maxChars) };
+    }
+    return {
+      title: skill ? `Create the "${skill}" skill?` : 'Create a new skill?',
       detail: truncateDetail(lines.join('\n'), maxChars)
     };
   }

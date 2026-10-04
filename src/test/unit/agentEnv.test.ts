@@ -1,5 +1,5 @@
 import * as assert from 'assert';
-import { agentEnvironmentPreamble, historyGroundingHint, terminalToolHint } from '../../agentEnv';
+import { agentEnvironmentPreamble, clarificationHint, historyGroundingHint, terminalToolHint } from '../../agentEnv';
 
 suite('agentEnv', () => {
   test('tells the model Windows with Windows-only commands', () => {
@@ -39,5 +39,12 @@ suite('agentEnv', () => {
     const hint = historyGroundingHint();
     assert.match(hint, /do not repeat/);
     assert.match(hint, /latest user message/);
+  });
+
+  test('clarificationHint asks one question instead of guessing', () => {
+    const hint = clarificationHint();
+    assert.match(hint, /clarifying question/);
+    assert.match(hint, /instead of/);
+    assert.match(hint, /guessing/);
   });
 });

@@ -144,6 +144,72 @@ h1 {
   background: var(--vscode-button-secondaryBackground);
 }
 
+.message.question {
+  align-self: stretch;
+  color: var(--vscode-foreground);
+  background: var(--vscode-editor-background);
+  border: 1px solid var(--vscode-panel-border);
+}
+
+.question-item + .question-item {
+  margin-top: 10px;
+}
+
+.question-text {
+  font-weight: 600;
+}
+
+.question-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.question-option {
+  font-family: inherit;
+  font-size: inherit;
+  padding: 4px 12px;
+  border-radius: 12px;
+  cursor: pointer;
+  color: var(--vscode-button-secondaryForeground);
+  background: var(--vscode-button-secondaryBackground);
+  border: 1px solid var(--vscode-panel-border);
+}
+
+.question-option.selected {
+  color: var(--vscode-button-foreground);
+  background: var(--vscode-button-background);
+  border-color: var(--vscode-button-background);
+}
+
+.question-option:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.question-input {
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 6px;
+  padding: 6px 8px;
+  color: var(--vscode-input-foreground);
+  background: var(--vscode-input-background);
+  border: 1px solid var(--vscode-input-border);
+  font-family: inherit;
+  font-size: inherit;
+  border-radius: 6px;
+}
+
+.question-input:disabled {
+  opacity: 0.55;
+}
+
+.question-input:focus {
+  outline: 1px solid var(--vscode-focusBorder);
+  outline-offset: -1px;
+}
+
 .message.action-log {
   align-self: center;
   padding: 2px 10px;

@@ -101,6 +101,16 @@ suite('toolSelection', () => {
     assert.strictEqual(list.title, 'List the runnable skills?');
   });
 
+  test('describeToolCall shows the new skill and its task', () => {
+    assert.deepStrictEqual(
+      describeToolCall('pocCreateSkill', { skill: 'summarize', task: 'Summarize a file' }, 300),
+      { title: 'Create the "summarize" skill?', detail: 'Skill: summarize\nTask: Summarize a file' }
+    );
+    const unnamed = describeToolCall('pocCreateSkill', { task: 'Summarize a file' }, 300);
+    assert.strictEqual(unnamed.title, 'Create a new skill?');
+    assert.strictEqual(unnamed.detail, 'Task: Summarize a file');
+  });
+
   test('describeToolCall falls back to the tool name with a JSON summary', () => {
     assert.deepStrictEqual(
       describeToolCall('mysteryTool', { a: 1 }, 300),
@@ -168,7 +178,8 @@ suite('toolSelection', () => {
       'pocRunTerminal',
       'run_in_terminal',
       'send_to_terminal',
-      'pocRunSkill'
+      'pocRunSkill',
+      'pocCreateSkill'
     ]);
   });
 });

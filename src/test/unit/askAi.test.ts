@@ -1,5 +1,6 @@
 import * as assert from 'assert';
 import {
+  isAnswerResultMessage,
   isAskAiMessage,
   isConfirmResultMessage,
   isOpenActionLogMessage,
@@ -67,5 +68,35 @@ suite('askAi', () => {
     assert.strictEqual(isStopMessage({ command: 'stop', sessionId: '' }), false);
     assert.strictEqual(isStopMessage({ command: 'ask' }), false);
     assert.strictEqual(isStopMessage(null), false);
+  });
+
+  test('isAnswerResultMessage validates answer results', () => {
+    assert.strictEqual(
+      isAnswerResultMessage({
+        command: 'answerResult',
+        id: 'question-1',
+        answers: [{ id: 'q1', value: 'top 10' }]
+      }),
+      true
+    );
+    assert.strictEqual(
+      isAnswerResultMessage({ command: 'answerResult', id: 'question-1', answers: null }),
+      true
+    );
+    assert.strictEqual(isAnswerResultMessage({ command: 'answerResult', id: 'q1' }), false);
+    assert.strictEqual(
+      isAnswerResultMessage({ command: 'answerResult', id: '', answers: [] }),
+      false
+    );
+    assert.strictEqual(
+      isAnswerResultMessage({
+        command: 'answerResult',
+        id: 'q1',
+        answers: [{ id: 'q1', value: 42 }]
+      }),
+      false
+    );
+    assert.strictEqual(isAnswerResultMessage({ command: 'ask' }), false);
+    assert.strictEqual(isAnswerResultMessage(null), false);
   });
 });

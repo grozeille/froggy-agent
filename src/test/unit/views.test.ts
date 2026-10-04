@@ -7,8 +7,16 @@ interface ViewDef {
   name: string;
 }
 
+interface ViewContainerDef {
+  id: string;
+  title: string;
+}
+
 interface PackageJson {
   contributes?: {
+    viewsContainers?: {
+      activitybar?: ViewContainerDef[];
+    };
     views?: {
       pocSidebar?: ViewDef[];
     };
@@ -31,5 +39,11 @@ suite('views', () => {
       views.map((view) => view.id),
       ['pocAskAiView', 'pocSessionsView', 'pocFilesView', 'pocSkillsView']
     );
+  });
+
+  test('activity bar container is titled Froggy Agent', () => {
+    const containers = readPackageJson().contributes?.viewsContainers?.activitybar ?? [];
+    const sidebar = containers.find((container) => container.id === 'pocSidebar');
+    assert.strictEqual(sidebar?.title, 'Froggy Agent');
   });
 });

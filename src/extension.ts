@@ -4,11 +4,16 @@ import { SessionsProvider } from './sessionsProvider';
 import { FilesDragDropController, FilesProvider } from './filesProvider';
 import { FILES_CLIPBOARD_CONTEXT, registerFileCommands } from './fileCommands';
 import { SkillsProvider } from './skillsProvider';
+import { registerSkillArchiveCommands } from './skillArchiveCommands';
+import { ARCHIVE_DIR_NAME } from './skillArchive';
+import { registerSessionArchiveCommands } from './sessionArchiveCommands';
 import { AskAiPanel } from './AskAiPanel';
 import { registerGoogleSearchTool } from './searchTool';
 import { registerDateTimeTool } from './dateTimeTool';
 import { registerDataFileTools } from './dataFilesTool';
 import { registerRunSkillTool } from './skillRunTool';
+import { registerAskQuestionsTool } from './askQuestionsTool';
+import { registerCreateSkillTool } from './skillCreateTool';
 import { registerTerminalTool } from './terminalTool';
 import { registerOpenPageTool } from './openPageTool';
 import { registerMemoryTools } from './memoryTool';
@@ -34,6 +39,8 @@ export function activate(context: vscode.ExtensionContext): void {
     store,
     filesView,
     ...registerFileCommands(() => filesProvider.refresh()),
+    ...registerSkillArchiveCommands(() => skillsProvider.refresh()),
+    ...registerSessionArchiveCommands(store, () => sessionsProvider.refresh()),
     vscode.window.registerTreeDataProvider(AskAiActionsProvider.viewId, actionsProvider),
     vscode.window.registerTreeDataProvider(SessionsProvider.viewId, sessionsProvider),
     vscode.window.registerTreeDataProvider(SkillsProvider.viewId, skillsProvider),
@@ -73,7 +80,7 @@ export function activate(context: vscode.ExtensionContext): void {
     })
   );
 
-  for (const tool of [registerGoogleSearchTool(), registerDateTimeTool(), ...registerDataFileTools(), ...registerMemoryTools(), registerRunSkillTool(), registerTerminalTool(), registerOpenPageTool()]) {
+  for (const tool of [registerGoogleSearchTool(), registerDateTimeTool(), ...registerDataFileTools(), ...registerMemoryTools(), registerRunSkillTool(), registerCreateSkillTool(() => skillsProvider.refresh()), registerAskQuestionsTool(), registerTerminalTool(), registerOpenPageTool()]) {
     if (tool) {
       context.subscriptions.push(tool);
     }
@@ -82,7 +89,8 @@ export function activate(context: vscode.ExtensionContext): void {
   // Keep the Files / Skills views fresh when files change.
   const watchers: Array<[string, () => void]> = [
     ['data/*', () => filesProvider.refresh()],
-    ['.github/skills/**/*', () => skillsProvider.refresh()]
+    ['.github/skills/**/*', () => skillsProvider.refresh()],
+    [`${ARCHIVE_DIR_NAME}/**/*`, () => skillsProvider.refresh()]
   ];
   for (const [pattern, onChange] of watchers) {
     const watcher = vscode.workspace.createFileSystemWatcher(pattern);

@@ -1,3 +1,5 @@
+import type { AskedQuestion } from './askQuestions';
+
 export interface AskAiTranscriptMessage {
   role: 'user' | 'assistant';
   text: string;
@@ -7,6 +9,12 @@ export type AskAiAskMessage = { command: 'ask'; prompt: string; sessionId: strin
 
 export type AskAiConfirmResultMessage = { command: 'confirmResult'; id: string; approved: boolean };
 
+export type AskAiAnswerResultMessage = {
+  command: 'answerResult';
+  id: string;
+  answers: { id: string; value: string }[] | null;
+};
+
 export type AskAiOpenActionLogMessage = { command: 'openActionLog'; sessionId: string };
 
 export type AskAiStopMessage = { command: 'stop'; sessionId: string };
@@ -15,6 +23,7 @@ export type AskAiWebviewMessage =
   | AskAiAskMessage
   | { command: 'openLink'; url: string }
   | AskAiConfirmResultMessage
+  | AskAiAnswerResultMessage
   | AskAiOpenActionLogMessage
   | AskAiStopMessage;
 
@@ -75,6 +84,33 @@ export function isConfirmResultMessage(value: unknown): value is AskAiConfirmRes
   );
 }
 
+export function isAnswerResultMessage(value: unknown): value is AskAiAnswerResultMessage {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+  const msg = value as { command?: unknown; id?: unknown; answers?: unknown };
+  if (
+    msg.command !== 'answerResult' ||
+    typeof msg.id !== 'string' ||
+    msg.id.length === 0
+  ) {
+    return false;
+  }
+  if (msg.answers === null) {
+    return true;
+  }
+  if (!Array.isArray(msg.answers)) {
+    return false;
+  }
+  return msg.answers.every((answer) => {
+    if (typeof answer !== 'object' || answer === null) {
+      return false;
+    }
+    const item = answer as { id?: unknown; value?: unknown };
+    return typeof item.id === 'string' && typeof item.value === 'string';
+  });
+}
+
 export type AskAiExtensionMessage =
   | {
       command: 'transcript';
@@ -84,6 +120,7 @@ export type AskAiExtensionMessage =
     }
   | { command: 'model'; sessionId: string; name: string }
   | { command: 'confirm'; sessionId: string; id: string; title: string; detail: string }
+  | { command: 'question'; sessionId: string; id: string; questions: AskedQuestion[] }
   | { command: 'actionLog'; sessionId: string }
   | { command: 'status'; sessionId: string; text: string }
   | { command: 'chunk'; sessionId: string; text: string }

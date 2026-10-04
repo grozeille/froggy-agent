@@ -6,6 +6,8 @@ export const RUN_SKILL_TOOL_NAME = 'pocRunSkill';
 /** Executable skills are `.github/skills/<name>/` folders containing this script. */
 export const SKILLS_DIR_NAME = '.github/skills';
 export const SKILL_SCRIPT_NAME = 'run.py';
+/** Optional third-party dependencies, installed into the workspace .venv before running. */
+export const REQUIREMENTS_FILE_NAME = 'requirements.txt';
 
 /** Kill skill scripts after this long; cap what comes back to the model. */
 export const SKILL_TIMEOUT_MS = 60_000;
@@ -93,4 +95,37 @@ export function formatSkillsHint(skills: readonly RunnableSkill[], toolName: str
     ` (file arguments as paths relative to the workspace root, e.g. "data/notes.md") instead of` +
     ` using the terminal or answering from knowledge.`
   );
+}
+
+/**
+ * Render an executable + arguments as one command line for the action log:
+ * parts with whitespace or quotes are double-quoted (inner quotes doubled).
+ */
+export function formatCommandLine(executable: string, args: readonly string[]): string {
+  return [executable, ...args].map(quoteCommandPart).join(' ');
+}
+
+function quoteCommandPart(part: string): string {
+  if (!/[\s"]/.test(part)) {
+    return part;
+  }
+  return `"${part.replace(/"/g, '""')}"`;
+}
+
+/**
+ * Commands executed by the skill runner during the current tool call (pip
+ * install, python run). The tool records them, the panel drains them into
+ * the action log right after each invocation. Best-effort: the agent loop
+ * invokes tools sequentially, so one buffer per call is enough.
+ */
+let runCommands: string[] = [];
+
+export function recordRunCommand(command: string): void {
+  runCommands.push(command);
+}
+
+export function takeRunCommands(): string[] {
+  const commands = runCommands;
+  runCommands = [];
+  return commands;
 }

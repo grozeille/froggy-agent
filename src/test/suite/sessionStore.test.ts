@@ -84,3 +84,67 @@ suite('SessionStore main chat', () => {
     }
   });
 });
+
+suite('SessionStore archive', () => {
+  test('archive moves a session from list() to listArchived() and back', async () => {
+    const store = new SessionStore(fakeMemento());
+    try {
+      const session = await store.create();
+      await store.save(withMessage(session, { role: 'user', text: 'hello' }, Date.now()));
+      await store.archive(session.id);
+      assert.deepStrictEqual(store.list().map((s) => s.id), []);
+      assert.deepStrictEqual(
+        store.listArchived().map((s) => s.id),
+        [session.id]
+      );
+      await store.restore(session.id);
+      assert.deepStrictEqual(
+        store.list().map((s) => s.id),
+        [session.id]
+      );
+      assert.deepStrictEqual(store.listArchived(), []);
+    } finally {
+      store.dispose();
+    }
+  });
+
+  test('archive ignores unknown ids and the main chat', async () => {
+    const store = new SessionStore(fakeMemento());
+    try {
+      await store.getOrCreateMain();
+      await store.archive(MAIN_SESSION_ID);
+      await store.archive('missing');
+      await store.restore('missing');
+      assert.deepStrictEqual(store.listArchived(), []);
+      assert.ok(store.get(MAIN_SESSION_ID), 'main chat survives archive attempts');
+    } finally {
+      store.dispose();
+    }
+  });
+
+  test('create preserves archived sessions even when empty', async () => {
+    const store = new SessionStore(fakeMemento());
+    try {
+      const session = await store.create();
+      await store.archive(session.id);
+      await store.create();
+      assert.ok(store.get(session.id), 'archived session should survive create()');
+    } finally {
+      store.dispose();
+    }
+  });
+
+  test('remove deletes an archived session for good', async () => {
+    const store = new SessionStore(fakeMemento());
+    try {
+      const session = await store.create();
+      await store.save(withMessage(session, { role: 'user', text: 'hello' }, Date.now()));
+      await store.archive(session.id);
+      await store.remove(session.id);
+      assert.strictEqual(store.get(session.id), undefined);
+      assert.deepStrictEqual(store.listArchived(), []);
+    } finally {
+      store.dispose();
+    }
+  });
+});

@@ -1,12 +1,16 @@
 import * as assert from 'assert';
 import {
+  formatCommandLine,
   formatSkillList,
   formatSkillsHint,
   MAX_SKILL_OUTPUT_CHARS,
+  REQUIREMENTS_FILE_NAME,
   resolveSkillName,
   RUN_SKILL_TOOL_NAME,
   SKILL_SCRIPT_NAME,
   SKILL_TIMEOUT_MS,
+  recordRunCommand,
+  takeRunCommands,
   truncateOutput,
   venvPythonPath
 } from '../../skillRun';
@@ -84,7 +88,29 @@ suite('skillRun', () => {
   test('execution constants are defined', () => {
     assert.strictEqual(RUN_SKILL_TOOL_NAME, 'pocRunSkill');
     assert.strictEqual(SKILL_SCRIPT_NAME, 'run.py');
+    assert.strictEqual(REQUIREMENTS_FILE_NAME, 'requirements.txt');
     assert.strictEqual(SKILL_TIMEOUT_MS, 60_000);
     assert.strictEqual(MAX_SKILL_OUTPUT_CHARS, 20_000);
+  });
+
+  test('formatCommandLine quotes parts with whitespace or quotes', () => {
+    assert.strictEqual(
+      formatCommandLine('python', ['run.py', 'data/a.md']),
+      'python run.py data/a.md'
+    );
+    assert.strictEqual(
+      formatCommandLine('C:/My Tools/python.exe', ['C:/my dir/run.py', 'a b']),
+      '"C:/My Tools/python.exe" "C:/my dir/run.py" "a b"'
+    );
+    assert.strictEqual(formatCommandLine('python', ['say "hi"']), 'python "say ""hi"""');
+    assert.strictEqual(formatCommandLine('python', []), 'python');
+  });
+
+  test('takeRunCommands drains recorded commands in order', () => {
+    assert.deepStrictEqual(takeRunCommands(), []);
+    recordRunCommand('first');
+    recordRunCommand('second');
+    assert.deepStrictEqual(takeRunCommands(), ['first', 'second']);
+    assert.deepStrictEqual(takeRunCommands(), []);
   });
 });

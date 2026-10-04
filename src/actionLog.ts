@@ -4,6 +4,8 @@ export interface ActionLogEntry {
   tool: string;
   input: string;
   decision: 'auto' | 'approved' | 'declined';
+  /** Commands executed during the run (skill runner), drained per tool call. */
+  commands?: string[];
   output?: string;
 }
 
@@ -33,7 +35,10 @@ export function formatActionLog(entries: ActionLogEntry[]): string {
   const blocks = entries.map((entry) => {
     const when = new Date(entry.at).toLocaleString();
     const head = `[${when}] ${entry.tool} (${entry.decision})\ninput: ${entry.input}`;
-    return entry.output ? `${head}\noutput:\n${entry.output}` : head;
+    const withCommands = entry.commands?.length
+      ? `${head}\ncommands:\n${entry.commands.join('\n')}`
+      : head;
+    return entry.output ? `${withCommands}\noutput:\n${entry.output}` : withCommands;
   });
   return `Action log — tool runs for this session\n\n${blocks.join('\n\n---\n\n')}`;
 }

@@ -37,6 +37,14 @@ suite('actionLog', () => {
     assert.match(text, /declined/);
   });
 
+  test('formatActionLog renders recorded commands', () => {
+    const text = formatActionLog([entry({ commands: ['python run.py', 'pip install -r req'] })]);
+    assert.match(text, /commands:/);
+    assert.match(text, /python run\.py/);
+    assert.match(text, /pip install/);
+    assert.ok(!formatActionLog([entry({ commands: undefined })]).includes('commands:'));
+  });
+
   test('formatActionLog explains an empty log', () => {
     assert.match(formatActionLog([]), /No tool actions recorded/);
   });

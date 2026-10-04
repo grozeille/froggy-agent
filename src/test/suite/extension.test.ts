@@ -29,6 +29,12 @@ suite('Extension Test Suite', () => {
     assert.ok(commands.includes('poc-vscode-addin.newFile'));
     assert.ok(commands.includes('poc-vscode-addin.newFolder'));
     assert.ok(commands.includes('poc-vscode-addin.openPreview'));
+    assert.ok(commands.includes('poc-vscode-addin.deleteSkill'));
+    assert.ok(commands.includes('poc-vscode-addin.restoreSkill'));
+    assert.ok(commands.includes('poc-vscode-addin.deleteSkillPermanently'));
+    assert.ok(commands.includes('poc-vscode-addin.deleteSession'));
+    assert.ok(commands.includes('poc-vscode-addin.restoreSession'));
+    assert.ok(commands.includes('poc-vscode-addin.deleteSessionPermanently'));
   });
 
   test('Should default the model setting to auto', async () => {
@@ -75,6 +81,28 @@ suite('Extension Test Suite', () => {
     assert.ok(
       vscode.lm.tools.some((tool) => tool.name === 'pocRunSkill'),
       'pocRunSkill tool should be registered'
+    );
+  });
+
+  test('Should register the create-skill language model tool', async () => {
+    const ext = vscode.extensions.getExtension('poc.poc-vscode-addin');
+    assert.ok(ext);
+    await ext.activate();
+    assert.ok(vscode.lm, 'Language model API should be available');
+    assert.ok(
+      vscode.lm.tools.some((tool) => tool.name === 'pocCreateSkill'),
+      'pocCreateSkill tool should be registered'
+    );
+  });
+
+  test('Should register the ask-questions language model tool', async () => {
+    const ext = vscode.extensions.getExtension('poc.poc-vscode-addin');
+    assert.ok(ext);
+    await ext.activate();
+    assert.ok(vscode.lm, 'Language model API should be available');
+    assert.ok(
+      vscode.lm.tools.some((tool) => tool.name === 'pocAskQuestions'),
+      'pocAskQuestions tool should be registered'
     );
   });
 

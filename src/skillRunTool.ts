@@ -1,10 +1,15 @@
 import { execFile } from 'child_process';
 import { promisify } from 'util';
 import * as vscode from 'vscode';
+import { DEPS_MARKER_NAME, PIP_INSTALL_TIMEOUT_MS, hashRequirements } from './pythonEnv';
+import { ensureWorkspacePython } from './pythonEnvSetup';
 import { extractSkillDescription, extractSkillTitle } from './skills';
 import {
+  formatCommandLine,
   formatSkillList,
   MAX_SKILL_OUTPUT_CHARS,
+  REQUIREMENTS_FILE_NAME,
+  recordRunCommand,
   resolveSkillName,
   RUN_SKILL_TOOL_NAME,
   SKILL_SCRIPT_NAME,
@@ -115,22 +120,88 @@ export class RunSkillTool implements vscode.LanguageModelTool<RunSkillToolInput>
         `Skill "${name}" has no runnable script (expected ${SKILL_SCRIPT_NAME}).`
       );
     }
+    let python: string | undefined;
+    if (await exists(vscode.Uri.joinPath(skillDir, REQUIREMENTS_FILE_NAME))) {
+      python = await this._ensureRequirements(root, skillDir);
+    }
     const args = Array.isArray(options.input.args)
       ? options.input.args.filter((arg): arg is string => typeof arg === 'string')
       : [];
     return new vscode.LanguageModelToolResult([
-      new vscode.LanguageModelTextPart(await this._run(root, script, args))
+      new vscode.LanguageModelTextPart(await this._run(root, script, args, python))
     ]);
   }
 
-  private async _run(root: vscode.Uri, script: vscode.Uri, args: string[]): Promise<string> {
-    // Prefer the project's own environment, fall back to PATH.
+  /** Project interpreter: the workspace `.venv` when present, else PATH `python`. */
+  private async _defaultPython(root: vscode.Uri): Promise<string> {
     const venvPython = venvPythonPath(root.fsPath);
-    const python = (await exists(vscode.Uri.file(venvPython))) ? venvPython : 'python';
+    return (await exists(vscode.Uri.file(venvPython))) ? venvPython : 'python';
+  }
+
+  /**
+   * Install the skill requirements.txt into the workspace `.venv`
+   * (created when missing) and return its interpreter. Skips reinstalls
+   * while the requirements and the interpreter are unchanged.
+   */
+  private async _ensureRequirements(root: vscode.Uri, skillDir: vscode.Uri): Promise<string> {
+    const { python } = await ensureWorkspacePython(root);
+    const requirements = vscode.Uri.joinPath(skillDir, REQUIREMENTS_FILE_NAME);
+    const reqText = new TextDecoder('utf-8').decode(
+      await vscode.workspace.fs.readFile(requirements)
+    );
+    const expected = `${hashRequirements(reqText)}:${(await vscode.workspace.fs.stat(vscode.Uri.file(python))).mtime}`;
+    const marker = vscode.Uri.joinPath(skillDir, DEPS_MARKER_NAME);
+    try {
+      const current = new TextDecoder('utf-8').decode(await vscode.workspace.fs.readFile(marker));
+      if (current.trim() === expected) {
+        return python;
+      }
+    } catch {
+      // Missing or unreadable marker: install below.
+    }
+    recordRunCommand(formatCommandLine(python, ['-m', 'pip', 'install', '-r', REQUIREMENTS_FILE_NAME]));
+    try {
+      await execFileAsync(python, ['-m', 'pip', 'install', '-r', REQUIREMENTS_FILE_NAME], {
+        cwd: skillDir.fsPath,
+        timeout: PIP_INSTALL_TIMEOUT_MS,
+        windowsHide: true
+      });
+    } catch (err) {
+      const code = (err as { code?: unknown }).code;
+      if (code === 'ETIMEDOUT') {
+        throw new Error(
+          `Installing the skill requirements timed out after ${PIP_INSTALL_TIMEOUT_MS / 1000}s.`
+        );
+      }
+      const detail = [(err as { stdout?: unknown }).stdout, (err as { stderr?: unknown }).stderr]
+        .filter((text): text is string => typeof text === 'string' && text.trim().length > 0)
+        .join('\n');
+      throw new Error(
+        `Failed to install the skill requirements.${detail ? `\n${truncateOutput(detail, 2000)}` : ''}`
+      );
+    }
+    try {
+      await vscode.workspace.fs.writeFile(marker, new TextEncoder().encode(expected));
+    } catch {
+      // Marker is best-effort: worst case the next run reinstalls.
+    }
+    return python;
+  }
+
+  private async _run(
+    root: vscode.Uri,
+    script: vscode.Uri,
+    args: string[],
+    python?: string
+  ): Promise<string> {
+    // Prefer the caller's interpreter, else the project's own environment,
+    // else PATH.
+    const interpreter = python ?? (await this._defaultPython(root));
+    recordRunCommand(formatCommandLine(interpreter, [script.fsPath, ...args]));
     let stdout: string;
     let stderr: string;
     try {
-      ({ stdout, stderr } = await execFileAsync(python, [script.fsPath, ...args], {
+      ({ stdout, stderr } = await execFileAsync(interpreter, [script.fsPath, ...args], {
         cwd: root.fsPath,
         timeout: SKILL_TIMEOUT_MS,
         maxBuffer: 1024 * 1024,

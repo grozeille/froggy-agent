@@ -5,15 +5,26 @@ import {
   stripAnsi,
   type ActionLogEntry
 } from './actionLog';
-import { agentEnvironmentPreamble, historyGroundingHint, terminalToolHint } from './agentEnv';
+import { agentEnvironmentPreamble, clarificationHint, historyGroundingHint, terminalToolHint } from './agentEnv';
 import {
+  isAnswerResultMessage,
   isAskAiMessage,
   isConfirmResultMessage,
   isOpenActionLogMessage,
   isOpenLinkMessage,
   isStopMessage
 } from './askAi';
-import { formatSkillsHint, truncateOutput } from './skillRun';
+import {
+  ASK_QUESTIONS_TOOL_NAME,
+  dismissedQuestionsText,
+  formatAskQuestionsHint,
+  formatQuestionAnswers,
+  resolveAskedQuestions,
+  type AskedQuestion,
+  type QuestionAnswer
+} from './askQuestions';
+import { formatSkillsHint, takeRunCommands, truncateOutput } from './skillRun';
+import { CREATE_SKILL_TOOL_NAME, formatCreateSkillHint } from './skillCreate';
 import { listRunnableSkills } from './skillRunTool';
 import { DATE_TIME_TOOL_NAME } from './dateTime';
 import { GOOGLE_SEARCH_TOOL_NAME } from './searchUrl';
@@ -61,6 +72,8 @@ export class AskAiPanel {
   private _disposables: vscode.Disposable[] = [];
   private _pendingConfirms = new Map<string, (approved: boolean) => void>();
   private _confirmSeq = 0;
+  private _pendingQuestions = new Map<string, (answers: QuestionAnswer[] | null) => void>();
+  private _questionSeq = 0;
   private _actionLogs = new Map<string, ActionLogEntry[]>();
   private _askRuns = new Map<string, { source: vscode.CancellationTokenSource; cancelled: boolean }>();
 
@@ -85,6 +98,8 @@ export class AskAiPanel {
           await this._handleOpenLink(message.url);
         } else if (isConfirmResultMessage(message)) {
           this._resolveConfirm(message.id, message.approved);
+        } else if (isAnswerResultMessage(message)) {
+          this._resolveQuestion(message.id, message.answers);
         } else if (isOpenActionLogMessage(message)) {
           await this._handleOpenActionLog(message.sessionId);
         } else if (isStopMessage(message)) {
@@ -131,7 +146,7 @@ export class AskAiPanel {
       run.source.cancel();
     }
     this._askRuns.clear();
-    this._denyPendingConfirms();
+    this._denyPendingPrompts();
     this._panel.dispose();
     while (this._disposables.length) {
       const d = this._disposables.pop();
@@ -146,7 +161,7 @@ export class AskAiPanel {
     }
     // Leaving a flow that waits for confirmation denies it: never run a
     // sensitive tool the user walked away from.
-    this._denyPendingConfirms();
+    this._denyPendingPrompts();
     this._sessionId = sessionId;
     this._updateTitle(session);
     await this._panel.webview.postMessage({
@@ -186,7 +201,7 @@ export class AskAiPanel {
       run.cancelled = true;
       run.source.cancel();
     }
-    this._denyPendingConfirms();
+    this._denyPendingPrompts();
   }
 
   private async _resolveModel(): Promise<vscode.LanguageModelChat> {
@@ -223,12 +238,36 @@ export class AskAiPanel {
     }
   }
 
-  /** Deny anything still pending (session switch, panel close). */
-  private _denyPendingConfirms(): void {
+  /** In-chat question card shown when the model asks structured questions. */
+  private async _askUserQuestions(
+    sessionId: string,
+    questions: AskedQuestion[]
+  ): Promise<QuestionAnswer[] | null> {
+    const id = `question-${++this._questionSeq}`;
+    await this._panel.webview.postMessage({ command: 'question', sessionId, id, questions });
+    return new Promise<QuestionAnswer[] | null>((resolve) => {
+      this._pendingQuestions.set(id, resolve);
+    });
+  }
+
+  private _resolveQuestion(id: string, answers: QuestionAnswer[] | null): void {
+    const resolve = this._pendingQuestions.get(id);
+    if (resolve) {
+      this._pendingQuestions.delete(id);
+      resolve(answers);
+    }
+  }
+
+  /** Deny anything still pending (session switch, panel close, stop). */
+  private _denyPendingPrompts(): void {
     for (const resolve of this._pendingConfirms.values()) {
       resolve(false);
     }
     this._pendingConfirms.clear();
+    for (const resolve of this._pendingQuestions.values()) {
+      resolve(null);
+    }
+    this._pendingQuestions.clear();
   }
 
   /** Refresh the panel badge; failures surface later when asking. */
@@ -277,9 +316,9 @@ export class AskAiPanel {
       const model = await this._resolveModel();
       await webview.postMessage({ command: 'model', sessionId, name: model.name });
       // Agent mode: the model may call tools. Calls run silently — the panel
-      // keeps showing "Thinking...". Builtins (date/time, data
-      // files, browser, memory, skill runner, terminal runner) plus the
-      // extra names from the tools setting; file tools resolve paths inside
+      // keeps showing "Thinking...". Builtins (date/time, data files, browser,
+      // memory, questions, skill runner, skill factory and terminal runner)
+      // plus the extra names from the tools setting; file tools resolve paths inside
       // <workspace>/data implicitly. External terminal tools are dropped
       // when the builtin is available so a run never asks twice (in-chat
       // card + native popup).
@@ -291,7 +330,9 @@ export class AskAiPanel {
         OPEN_PAGE_TOOL_NAME,
         READ_MEMORY_TOOL_NAME,
         APPEND_MEMORY_TOOL_NAME,
+        ASK_QUESTIONS_TOOL_NAME,
         RUN_SKILL_TOOL_NAME,
+        CREATE_SKILL_TOOL_NAME,
         TERMINAL_TOOL_NAME
       ];
       const config = vscode.workspace.getConfiguration('poc-vscode-addin');
@@ -305,16 +346,27 @@ export class AskAiPanel {
       // Unsaved preamble: OS/shell match + default to the terminal tool
       // (only named when actually offered) + do-not-redo grounding +
       // runnable skill catalog (so matching requests route to the skill
-      // runner instead of the terminal).
+      // runner instead of the terminal) + skill-factory nudge (creation
+      // requests delegate to the builder agent) + clarify-when-ambiguous
+      // nudge + structured-questions nudge (only named when offered).
       const offeredNames = tools.map((tool) => tool.name);
       const skillsHint = offeredNames.includes(RUN_SKILL_TOOL_NAME)
         ? formatSkillsHint(await listRunnableSkills(), RUN_SKILL_TOOL_NAME)
+        : '';
+      const createSkillHint = offeredNames.includes(CREATE_SKILL_TOOL_NAME)
+        ? formatCreateSkillHint(CREATE_SKILL_TOOL_NAME)
+        : '';
+      const askQuestionsHint = offeredNames.includes(ASK_QUESTIONS_TOOL_NAME)
+        ? formatAskQuestionsHint(ASK_QUESTIONS_TOOL_NAME)
         : '';
       const preamble =
         agentEnvironmentPreamble() +
         terminalToolHint(offeredNames) +
         historyGroundingHint() +
-        skillsHint;
+        clarificationHint() +
+        skillsHint +
+        createSkillHint +
+        askQuestionsHint;
       // History replays past tool rounds (calls + results, as in the live
       // loop) — without them the model cannot tell previous turns' actions
       // were already performed and redoes them on every new question.
@@ -376,9 +428,12 @@ export class AskAiPanel {
         for (const call of toolCalls) {
           ranTools = true;
           const inputSummary = summarizeToolInput(call.input, 300);
-          const gated = needsConfirmation(call.name, confirmList);
+          // Questions need no confirmation gate: asking the user IS the interaction.
+          const gated =
+            needsConfirmation(call.name, confirmList) && call.name !== ASK_QUESTIONS_TOOL_NAME;
           let decision: ActionLogEntry['decision'] = gated ? 'approved' : 'auto';
           let output: string | undefined;
+          let commands: string[] | undefined;
           try {
             if (gated) {
               const description = describeToolCall(call.name, call.input, 300);
@@ -406,17 +461,66 @@ export class AskAiPanel {
                 continue;
               }
             }
+            // Structured user questions are answered in-chat by the panel
+            // itself: no tool invocation, the answers come back as the result.
+            if (call.name === ASK_QUESTIONS_TOOL_NAME) {
+              const questions = resolveAskedQuestions(call.input);
+              if (!questions) {
+                const message = 'Ask at least one valid question with a non-empty question text.';
+                output = `Error: ${message}`;
+                toolResults.push(
+                  new vscode.LanguageModelToolResultPart(call.callId, [
+                    new vscode.LanguageModelTextPart(`Tool failed: ${message}`)
+                  ])
+                );
+                toolRuns.push({ tool: call.name, input: call.input, output, decision });
+              } else {
+                await webview.postMessage({
+                  command: 'status',
+                  sessionId,
+                  text: 'Waiting for your answers'
+                });
+                const answers = await this._askUserQuestions(sessionId, questions);
+                if (!answers) {
+                  decision = 'declined';
+                  toolResults.push(
+                    new vscode.LanguageModelToolResultPart(call.callId, [
+                      new vscode.LanguageModelTextPart(dismissedQuestionsText())
+                    ])
+                  );
+                  toolRuns.push({ tool: call.name, input: call.input, decision });
+                } else {
+                  output = truncateOutput(formatQuestionAnswers(questions, answers), 2000);
+                  toolResults.push(
+                    new vscode.LanguageModelToolResultPart(call.callId, [
+                      new vscode.LanguageModelTextPart(output)
+                    ])
+                  );
+                  toolRuns.push({ tool: call.name, input: call.input, output, decision });
+                }
+              }
+              this._recordAction(sessionId, {
+                at: Date.now(),
+                tool: call.name,
+                input: inputSummary,
+                decision,
+                output
+              });
+              continue;
+            }
             const result = await vscode.lm.invokeTool(
               call.name,
               { input: call.input, toolInvocationToken: undefined },
               token
             );
             output = truncateOutput(stripAnsi(toolResultText(result.content)), 2000);
+            commands = takeRunCommands();
             toolResults.push(new vscode.LanguageModelToolResultPart(call.callId, result.content));
             toolRuns.push({ tool: call.name, input: call.input, output, decision });
           } catch (err) {
             const message = err instanceof Error ? err.message : String(err);
             output = `Error: ${message}`;
+            commands = takeRunCommands();
             toolResults.push(
               new vscode.LanguageModelToolResultPart(call.callId, [
                 new vscode.LanguageModelTextPart(`Tool failed: ${message}`)
@@ -429,7 +533,8 @@ export class AskAiPanel {
             tool: call.name,
             input: inputSummary,
             decision,
-            output
+            output,
+            commands
           });
         }
         messages.push(vscode.LanguageModelChatMessage.Assistant(toolCalls));
