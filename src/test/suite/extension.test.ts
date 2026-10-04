@@ -58,6 +58,28 @@ suite('Extension Test Suite', () => {
     );
   });
 
+  test('Should register the web search language model tool', async () => {
+    const ext = vscode.extensions.getExtension('poc.poc-vscode-addin');
+    assert.ok(ext);
+    await ext.activate();
+    assert.ok(vscode.lm, 'Language model API should be available');
+    assert.ok(
+      vscode.lm.tools.some((tool) => tool.name === 'pocWebSearch'),
+      'pocWebSearch tool should be registered'
+    );
+  });
+
+  test('Should register the fetch-page language model tool', async () => {
+    const ext = vscode.extensions.getExtension('poc.poc-vscode-addin');
+    assert.ok(ext);
+    await ext.activate();
+    assert.ok(vscode.lm, 'Language model API should be available');
+    assert.ok(
+      vscode.lm.tools.some((tool) => tool.name === 'pocFetchWebPage'),
+      'pocFetchWebPage tool should be registered'
+    );
+  });
+
   test('Should register the data file language model tools', async () => {
     const ext = vscode.extensions.getExtension('poc.poc-vscode-addin');
     assert.ok(ext);

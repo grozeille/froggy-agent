@@ -28,8 +28,10 @@ tree view and a central Ask AI panel with two-way message passing.
   can call tools silently — tool calls never appear in the panel. Builtins:
   date/time, read/list files in `<workspace>/data` (paths the user mentions
   resolve inside `data/` implicitly: relative only, `..` rejected), Google
-  search and opening any page in the Simple Browser, memory read/append
-  (`<workspace>/memory.md`), the skill runner
+  search and opening any page in the Simple Browser, internet search with
+  page fetch (explicit "using internet" requests are researched and
+  summarized with sources), memory read/append (`<workspace>/memory.md`),
+  the skill runner
   (`.github/skills/<name>/run.py`), the skill factory (new skills built by a
   Python-dev sub-agent), and the terminal runner (shell commands
   from the workspace root, confirmed in-chat); extra tool names from the
@@ -136,6 +138,13 @@ appends one short fact per call to `<workspace>/memory.md` (created with a
 remembered, it reads the file back (`#readMemory`). Appending is not gated:
 memorizing stays a one-step answer.
 
+Web search: when the user asks to use the internet (`#webSearch`), the model
+searches (instant answers with sources, market quotes for known indices,
+stocks, commodities and crypto, Wikipedia matches) and summarizes the
+results with their sources; it reads a promising result in full via
+`#fetchWebPage` (public pages only, truncated to 8KB). Plain questions
+never trigger a search — only explicit internet requests do.
+
 ## Message protocol
 
 Webview -> extension (`src/askAi.ts`):
@@ -184,6 +193,13 @@ Extension -> webview (each message carries its `sessionId`):
   (`#googleSearch`), opens a Google search in the Simple Browser (unit-tested)
 - `src/openPageTool.ts` + `src/openPage.ts` — `pocOpenBrowserPage` language model
   tool (`#openPage`), opens any http(s) page in the Simple Browser (unit-tested)
+- `src/webSearchTool.ts` + `src/webSearch.ts` — `pocWebSearch` language model
+  tool (`#webSearch`), searches the internet (instant answers, market quotes,
+  Wikipedia) and returns readable results to summarize (unit-tested)
+- `src/fetchPageTool.ts` + `src/fetchPage.ts` — `pocFetchWebPage` language model
+  tool (`#fetchWebPage`), fetches a public page as text for the model to read
+  (local URLs refused); `src/htmlText.ts` holds the shared HTML-to-text
+  helpers (unit-tested)
 - `src/memoryTool.ts` + `src/memory.ts` — `pocReadMemory` (`#readMemory`)
   and `pocAppendMemory` (`#appendMemory`) language model tools, read and
   append one-line facts in `<workspace>/memory.md` (unit-tested)

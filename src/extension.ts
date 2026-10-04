@@ -9,6 +9,7 @@ import { ARCHIVE_DIR_NAME } from './skillArchive';
 import { registerSessionArchiveCommands } from './sessionArchiveCommands';
 import { AskAiPanel } from './AskAiPanel';
 import { registerGoogleSearchTool } from './searchTool';
+import { registerWebSearchTool } from './webSearchTool';
 import { registerDateTimeTool } from './dateTimeTool';
 import { registerDataFileTools } from './dataFilesTool';
 import { registerRunSkillTool } from './skillRunTool';
@@ -16,6 +17,7 @@ import { registerAskQuestionsTool } from './askQuestionsTool';
 import { registerCreateSkillTool } from './skillCreateTool';
 import { registerTerminalTool } from './terminalTool';
 import { registerOpenPageTool } from './openPageTool';
+import { registerFetchPageTool } from './fetchPageTool';
 import { registerMemoryTools } from './memoryTool';
 import { SessionStore } from './sessionStore';
 
@@ -80,7 +82,7 @@ export function activate(context: vscode.ExtensionContext): void {
     })
   );
 
-  for (const tool of [registerGoogleSearchTool(), registerDateTimeTool(), ...registerDataFileTools(), ...registerMemoryTools(), registerRunSkillTool(), registerCreateSkillTool(() => skillsProvider.refresh()), registerAskQuestionsTool(), registerTerminalTool(), registerOpenPageTool()]) {
+  for (const tool of [registerGoogleSearchTool(), registerWebSearchTool(), registerDateTimeTool(), ...registerDataFileTools(), ...registerMemoryTools(), registerRunSkillTool(), registerCreateSkillTool(() => skillsProvider.refresh()), registerAskQuestionsTool(), registerTerminalTool(), registerOpenPageTool(), registerFetchPageTool()]) {
     if (tool) {
       context.subscriptions.push(tool);
     }

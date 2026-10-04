@@ -1,5 +1,5 @@
 import * as assert from 'assert';
-import { agentEnvironmentPreamble, clarificationHint, historyGroundingHint, terminalToolHint } from '../../agentEnv';
+import { agentEnvironmentPreamble, clarificationHint, historyGroundingHint, terminalToolHint, webSearchHint } from '../../agentEnv';
 
 suite('agentEnv', () => {
   test('tells the model Windows with Windows-only commands', () => {
@@ -46,5 +46,25 @@ suite('agentEnv', () => {
     assert.match(hint, /clarifying question/);
     assert.match(hint, /instead of/);
     assert.match(hint, /guessing/);
+  });
+
+  test('webSearchHint names the search and fetch tools when offered', () => {
+    const hint = webSearchHint(['pocDateTime', 'pocWebSearch', 'pocFetchWebPage']);
+    assert.ok(hint.includes('pocWebSearch'), 'names the search tool');
+    assert.ok(hint.includes('pocFetchWebPage'), 'names the fetch tool');
+    assert.match(hint, /using internet/);
+    assert.match(hint, /instead of answering from knowledge/);
+  });
+
+  test('webSearchHint skips the fetch tool when not offered', () => {
+    const hint = webSearchHint(['pocWebSearch']);
+    assert.ok(hint.includes('pocWebSearch'), 'names the search tool');
+    assert.ok(!hint.includes('pocFetchWebPage'), 'skips the fetch tool');
+  });
+
+  test('webSearchHint stays silent without the search tool', () => {
+    assert.strictEqual(webSearchHint(['pocDateTime']), '');
+    assert.strictEqual(webSearchHint(['pocFetchWebPage']), '');
+    assert.strictEqual(webSearchHint([]), '');
   });
 });

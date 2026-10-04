@@ -53,6 +53,33 @@ export function terminalToolHint(offeredToolNames: readonly string[]): string {
 }
 
 /**
+ * Web research tools: `pocWebSearch` returns readable results for the model
+ * to summarize, `pocFetchWebPage` reads one result in full.
+ */
+const WEB_SEARCH_TOOL_NAMES: readonly string[] = ['pocWebSearch', 'pocFetchWebPage'];
+
+/**
+ * Default-to-search nudge, appended to the preamble only when the web search
+ * tool is actually offered — so explicit "using internet" requests (prices,
+ * news, other fresh facts) become tool calls instead of knowledge answers.
+ */
+export function webSearchHint(offeredToolNames: readonly string[]): string {
+  const search = WEB_SEARCH_TOOL_NAMES[0];
+  if (!offeredToolNames.includes(search)) {
+    return '';
+  }
+  const fetchBit = offeredToolNames.includes(WEB_SEARCH_TOOL_NAMES[1])
+    ? ' If a result looks worth reading in full, read it with the "pocFetchWebPage" tool before answering.'
+    : '';
+  return (
+    ` When the user asks to use the internet or search the web (e.g. "using internet",` +
+    ` "on the internet", current prices, news or other fresh facts), call the "${search}"` +
+    ` tool and summarize its results with their sources instead of answering from knowledge.` +
+    fetchBit
+  );
+}
+
+/**
  * Clarification nudge, appended to every request: vague requests get one
  * short question instead of a guess — but only when the missing detail
  * actually changes the result, so obvious cases stay one-step answers.
