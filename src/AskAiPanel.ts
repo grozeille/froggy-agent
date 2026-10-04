@@ -46,6 +46,17 @@ import {
   type ToolCallDescription
 } from './toolSelection';
 import { TERMINAL_TOOL_NAME } from './terminal';
+import {
+  ATTENTION_ACTION,
+  formatAnswerNotification,
+  formatConfirmNotification,
+  formatErrorNotification,
+  formatQuestionNotification,
+  NATIVE_APP_NAME,
+  shouldNotifyAttention,
+  toNativeBody
+} from './notify';
+import { showWindowsToast, supportsNativeToast } from './winToast';
 import { isSafeHttpUrl } from './urls';
 import { SessionStore } from './sessionStore';
 import {
@@ -225,6 +236,7 @@ export class AskAiPanel {
       title: description.title,
       detail: description.detail
     });
+    this._notifyAttention(formatConfirmNotification(description.title));
     return new Promise<boolean>((resolve) => {
       this._pendingConfirms.set(id, resolve);
     });
@@ -245,6 +257,7 @@ export class AskAiPanel {
   ): Promise<QuestionAnswer[] | null> {
     const id = `question-${++this._questionSeq}`;
     await this._panel.webview.postMessage({ command: 'question', sessionId, id, questions });
+    this._notifyAttention(formatQuestionNotification(questions));
     return new Promise<QuestionAnswer[] | null>((resolve) => {
       this._pendingQuestions.set(id, resolve);
     });
@@ -281,6 +294,27 @@ export class AskAiPanel {
     } catch {
       // Leave the badge as-is; asking will report the problem.
     }
+  }
+
+  /**
+   * Attention ping when VS Code lost the focus: the user would otherwise
+   * miss the finished answer, question or confirmation waiting in the chat.
+   * Exactly one popup: the native OS toast on Windows, the in-app popup
+   * (with an Open Chat action) where no native toast exists.
+   */
+  private _notifyAttention(message: string): void {
+    if (!shouldNotifyAttention(vscode.window.state.focused)) {
+      return;
+    }
+    if (supportsNativeToast()) {
+      showWindowsToast(NATIVE_APP_NAME, toNativeBody(message));
+      return;
+    }
+    void vscode.window.showInformationMessage(message, ATTENTION_ACTION).then((selection) => {
+      if (selection === ATTENTION_ACTION) {
+        this._panel.reveal(vscode.ViewColumn.One);
+      }
+    });
   }
 
   private async _handleAsk(sessionId: string, prompt: string): Promise<void> {
@@ -551,6 +585,9 @@ export class AskAiPanel {
         )
       );
       await webview.postMessage({ command: 'done', sessionId });
+      if (!run.cancelled) {
+        this._notifyAttention(formatAnswerNotification(answer));
+      }
     } catch (err) {
       if (run.cancelled || err instanceof vscode.CancellationError) {
         // Stopped by the user: keep the partial answer, re-enable input.
@@ -571,6 +608,7 @@ export class AskAiPanel {
       } else {
         const message = err instanceof Error ? err.message : String(err);
         await webview.postMessage({ command: 'error', sessionId, message });
+        this._notifyAttention(formatErrorNotification());
       }
     } finally {
       if (this._askRuns.get(sessionId) === run) {

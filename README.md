@@ -40,7 +40,9 @@ tree view and a central Ask AI panel with two-way message passing.
   a new tab. The model receives the last 20 messages for follow-up context,
   with past tool calls and their results replayed so it does not redo
   previous turns' actions, and responses render as Markdown (bold, code,
-  tables, links).
+  tables, links). When VS Code lost the focus, a finished answer, a question
+  card or a confirmation card also raises a native Windows toast (a VS Code
+  notification with an `Open Chat` action where native toasts don't exist).
 - `WebviewPanel` with a strict Content Security Policy (nonce + `cspSource`).
 - Two-way messaging: webview `postMessage` -> extension `onDidReceiveMessage`,
   and extension `postMessage` -> webview `message` listener.
@@ -170,6 +172,8 @@ Extension -> webview (each message carries its `sessionId`):
 - `src/skills.ts` — `extractSkillTitle` and frontmatter `description` from `SKILL.md` (unit-tested)
 - `src/AskAiPanel.ts` — central `WebviewPanel`, `vscode.lm` agent chat (builtins + `tools` setting)
 - `src/askAi.ts` — Ask AI message validation (unit-tested)
+- `src/notify.ts` — unfocused-window attention popup texts (unit-tested)
+- `src/winToast.ts` — native Windows toast via WinRT, no dependency (unit-tested)
 - `src/sessions.ts` — session types, titles, the special main chat session and history replay with past tool runs (unit-tested)
 - `src/modelSelection.ts` — picks the chat model from the `model` setting (unit-tested)
 - `src/toolSelection.ts` — resolves builtins + `tools` setting names, friendly confirmation text, external-terminal supersede (unit-tested)
