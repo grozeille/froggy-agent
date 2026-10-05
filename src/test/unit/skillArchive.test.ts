@@ -58,25 +58,25 @@ suite('skillArchive', () => {
   test('archive/restore/delete commands are contributed', () => {
     const commands = readPackageJson().contributes?.commands ?? [];
     const byId = new Map(commands.map((entry) => [entry.command, entry.title]));
-    assert.strictEqual(byId.get('poc-vscode-addin.deleteSkill'), 'Archive');
-    assert.strictEqual(byId.get('poc-vscode-addin.restoreSkill'), 'Restore');
-    assert.strictEqual(byId.get('poc-vscode-addin.deleteSkillPermanently'), 'Delete');
+    assert.strictEqual(byId.get('froggy-agent.deleteSkill'), 'Archive');
+    assert.strictEqual(byId.get('froggy-agent.restoreSkill'), 'Restore');
+    assert.strictEqual(byId.get('froggy-agent.deleteSkillPermanently'), 'Delete');
   });
 
   test('skills view context menus target live vs archived skills', () => {
     const menus = readPackageJson().contributes?.menus?.['view/item/context'] ?? [];
     const byId = new Map(menus.map((entry) => [entry.command, entry.when]));
     assert.strictEqual(
-      byId.get('poc-vscode-addin.deleteSkill'),
-      `view == pocSkillsView && viewItem == ${SKILL_CONTEXT_VALUE}`
+      byId.get('froggy-agent.deleteSkill'),
+      `view == froggySkillsView && viewItem == ${SKILL_CONTEXT_VALUE}`
     );
     assert.strictEqual(
-      byId.get('poc-vscode-addin.restoreSkill'),
-      `view == pocSkillsView && viewItem == ${ARCHIVED_SKILL_CONTEXT_VALUE}`
+      byId.get('froggy-agent.restoreSkill'),
+      `view == froggySkillsView && viewItem == ${ARCHIVED_SKILL_CONTEXT_VALUE}`
     );
     assert.strictEqual(
-      byId.get('poc-vscode-addin.deleteSkillPermanently'),
-      `view == pocSkillsView && viewItem == ${ARCHIVED_SKILL_CONTEXT_VALUE}`
+      byId.get('froggy-agent.deleteSkillPermanently'),
+      `view == froggySkillsView && viewItem == ${ARCHIVED_SKILL_CONTEXT_VALUE}`
     );
   });
 
@@ -84,9 +84,9 @@ suite('skillArchive', () => {
     const palette = readPackageJson().contributes?.menus?.commandPalette ?? [];
     const byId = new Map(palette.map((entry) => [entry.command, entry.when]));
     for (const id of [
-      'poc-vscode-addin.deleteSkill',
-      'poc-vscode-addin.restoreSkill',
-      'poc-vscode-addin.deleteSkillPermanently'
+      'froggy-agent.deleteSkill',
+      'froggy-agent.restoreSkill',
+      'froggy-agent.deleteSkillPermanently'
     ]) {
       assert.strictEqual(byId.get(id), 'never', id);
     }

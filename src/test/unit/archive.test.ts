@@ -53,25 +53,25 @@ suite('archive', () => {
   test('session archive/restore/delete commands are contributed', () => {
     const commands = readPackageJson().contributes?.commands ?? [];
     const byId = new Map(commands.map((entry) => [entry.command, entry.title]));
-    assert.strictEqual(byId.get('poc-vscode-addin.deleteSession'), 'Archive');
-    assert.strictEqual(byId.get('poc-vscode-addin.restoreSession'), 'Restore');
-    assert.strictEqual(byId.get('poc-vscode-addin.deleteSessionPermanently'), 'Delete');
+    assert.strictEqual(byId.get('froggy-agent.deleteSession'), 'Archive');
+    assert.strictEqual(byId.get('froggy-agent.restoreSession'), 'Restore');
+    assert.strictEqual(byId.get('froggy-agent.deleteSessionPermanently'), 'Delete');
   });
 
   test('sessions view context menus target live vs archived sessions', () => {
     const menus = readPackageJson().contributes?.menus?.['view/item/context'] ?? [];
     const byId = new Map(menus.map((entry) => [entry.command, entry.when]));
     assert.strictEqual(
-      byId.get('poc-vscode-addin.deleteSession'),
-      `view == pocSessionsView && viewItem == ${SESSION_CONTEXT_VALUE}`
+      byId.get('froggy-agent.deleteSession'),
+      `view == froggySessionsView && viewItem == ${SESSION_CONTEXT_VALUE}`
     );
     assert.strictEqual(
-      byId.get('poc-vscode-addin.restoreSession'),
-      `view == pocSessionsView && viewItem == ${ARCHIVED_SESSION_CONTEXT_VALUE}`
+      byId.get('froggy-agent.restoreSession'),
+      `view == froggySessionsView && viewItem == ${ARCHIVED_SESSION_CONTEXT_VALUE}`
     );
     assert.strictEqual(
-      byId.get('poc-vscode-addin.deleteSessionPermanently'),
-      `view == pocSessionsView && viewItem == ${ARCHIVED_SESSION_CONTEXT_VALUE}`
+      byId.get('froggy-agent.deleteSessionPermanently'),
+      `view == froggySessionsView && viewItem == ${ARCHIVED_SESSION_CONTEXT_VALUE}`
     );
   });
 
@@ -79,9 +79,9 @@ suite('archive', () => {
     const palette = readPackageJson().contributes?.menus?.commandPalette ?? [];
     const byId = new Map(palette.map((entry) => [entry.command, entry.when]));
     for (const id of [
-      'poc-vscode-addin.deleteSession',
-      'poc-vscode-addin.restoreSession',
-      'poc-vscode-addin.deleteSessionPermanently'
+      'froggy-agent.deleteSession',
+      'froggy-agent.restoreSession',
+      'froggy-agent.deleteSessionPermanently'
     ]) {
       assert.strictEqual(byId.get(id), 'never', id);
     }

@@ -28,7 +28,7 @@ export function registerSessionArchiveCommands(
   refresh: () => void
 ): vscode.Disposable[] {
   const del = vscode.commands.registerCommand(
-    'poc-vscode-addin.deleteSession',
+    'froggy-agent.deleteSession',
     async (item?: unknown) => {
       const ref = toSessionRef(item);
       if (!ref || ref.archived) {
@@ -55,7 +55,7 @@ export function registerSessionArchiveCommands(
   );
 
   const restore = vscode.commands.registerCommand(
-    'poc-vscode-addin.restoreSession',
+    'froggy-agent.restoreSession',
     async (item?: unknown) => {
       const ref = toSessionRef(item);
       if (!ref || !ref.archived) {
@@ -79,7 +79,7 @@ export function registerSessionArchiveCommands(
   );
 
   const delForever = vscode.commands.registerCommand(
-    'poc-vscode-addin.deleteSessionPermanently',
+    'froggy-agent.deleteSessionPermanently',
     async (item?: unknown) => {
       const ref = toSessionRef(item);
       if (!ref || !ref.archived) {

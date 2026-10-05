@@ -19,19 +19,19 @@ suite('agentEnv', () => {
   });
 
   test('terminalToolHint names the offered terminal tool', () => {
-    const hint = terminalToolHint(['pocDateTime', 'run_in_terminal']);
+    const hint = terminalToolHint(['froggyDateTime', 'run_in_terminal']);
     assert.ok(hint.includes('run_in_terminal'), 'names the tool');
     assert.match(hint, /instead of answering from knowledge/);
   });
 
   test('terminalToolHint prefers the builtin over run_in_terminal', () => {
-    const hint = terminalToolHint(['run_in_terminal', 'pocRunTerminal']);
-    assert.ok(hint.includes('pocRunTerminal'), 'names the builtin');
+    const hint = terminalToolHint(['run_in_terminal', 'froggyRunTerminal']);
+    assert.ok(hint.includes('froggyRunTerminal'), 'names the builtin');
     assert.ok(!hint.includes('run_in_terminal'), 'skips the external tool');
   });
 
   test('terminalToolHint stays silent without a terminal tool', () => {
-    assert.strictEqual(terminalToolHint(['pocDateTime']), '');
+    assert.strictEqual(terminalToolHint(['froggyDateTime']), '');
     assert.strictEqual(terminalToolHint([]), '');
   });
 
@@ -49,22 +49,22 @@ suite('agentEnv', () => {
   });
 
   test('webSearchHint names the search and fetch tools when offered', () => {
-    const hint = webSearchHint(['pocDateTime', 'pocWebSearch', 'pocFetchWebPage']);
-    assert.ok(hint.includes('pocWebSearch'), 'names the search tool');
-    assert.ok(hint.includes('pocFetchWebPage'), 'names the fetch tool');
+    const hint = webSearchHint(['froggyDateTime', 'froggyWebSearch', 'froggyFetchWebPage']);
+    assert.ok(hint.includes('froggyWebSearch'), 'names the search tool');
+    assert.ok(hint.includes('froggyFetchWebPage'), 'names the fetch tool');
     assert.match(hint, /using internet/);
     assert.match(hint, /instead of answering from knowledge/);
   });
 
   test('webSearchHint skips the fetch tool when not offered', () => {
-    const hint = webSearchHint(['pocWebSearch']);
-    assert.ok(hint.includes('pocWebSearch'), 'names the search tool');
-    assert.ok(!hint.includes('pocFetchWebPage'), 'skips the fetch tool');
+    const hint = webSearchHint(['froggyWebSearch']);
+    assert.ok(hint.includes('froggyWebSearch'), 'names the search tool');
+    assert.ok(!hint.includes('froggyFetchWebPage'), 'skips the fetch tool');
   });
 
   test('webSearchHint stays silent without the search tool', () => {
-    assert.strictEqual(webSearchHint(['pocDateTime']), '');
-    assert.strictEqual(webSearchHint(['pocFetchWebPage']), '');
+    assert.strictEqual(webSearchHint(['froggyDateTime']), '');
+    assert.strictEqual(webSearchHint(['froggyFetchWebPage']), '');
     assert.strictEqual(webSearchHint([]), '');
   });
 });

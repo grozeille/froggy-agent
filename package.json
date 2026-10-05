@@ -1,9 +1,9 @@
 {
-  "name": "poc-vscode-addin",
-  "displayName": "POC VSCode Addin",
-  "description": "Proof of concept: sidebar tree view with Data/Skills sections and a simplified Ask AI panel.",
+  "name": "froggy-agent",
+  "displayName": "Froggy Agent",
+  "description": "Froggy Agent: sidebar tree view with Data/Skills sections and a simplified Ask AI panel.",
   "version": "0.0.1",
-  "publisher": "poc",
+  "publisher": "grozeille",
   "license": "MIT",
   "engines": {
     "vscode": "^1.90.0"
@@ -12,359 +12,359 @@
     "Other"
   ],
   "activationEvents": [
-    "onView:pocAskAiView",
-    "onView:pocSessionsView",
-    "onView:pocFilesView",
-    "onView:pocSkillsView",
-    "onCommand:poc-vscode-addin.sayHello",
-    "onCommand:poc-vscode-addin.askAi",
-    "onCommand:poc-vscode-addin.newSession",
-    "onCommand:poc-vscode-addin.clearSession",
-    "onCommand:poc-vscode-addin.openSession",
-    "onCommand:poc-vscode-addin.openMainChat",
-    "onCommand:poc-vscode-addin.refreshExplorer"
+    "onView:froggyAskAiView",
+    "onView:froggySessionsView",
+    "onView:froggyFilesView",
+    "onView:froggySkillsView",
+    "onCommand:froggy-agent.sayHello",
+    "onCommand:froggy-agent.askAi",
+    "onCommand:froggy-agent.newSession",
+    "onCommand:froggy-agent.clearSession",
+    "onCommand:froggy-agent.openSession",
+    "onCommand:froggy-agent.openMainChat",
+    "onCommand:froggy-agent.refreshExplorer"
   ],
   "main": "./out/extension.js",
   "contributes": {
     "viewsContainers": {
       "activitybar": [
         {
-          "id": "pocSidebar",
+          "id": "froggySidebar",
           "title": "Froggy Agent",
           "icon": "media/icon.svg"
         }
       ]
     },
     "views": {
-      "pocSidebar": [
+      "froggySidebar": [
         {
-          "id": "pocAskAiView",
+          "id": "froggyAskAiView",
           "name": "Ask AI"
         },
         {
-          "id": "pocSessionsView",
+          "id": "froggySessionsView",
           "name": "Sessions"
         },
         {
-          "id": "pocFilesView",
+          "id": "froggyFilesView",
           "name": "Files"
         },
         {
-          "id": "pocSkillsView",
+          "id": "froggySkillsView",
           "name": "Skills"
         }
       ]
     },
     "commands": [
       {
-        "command": "poc-vscode-addin.sayHello",
-        "title": "POC: Say Hello",
-        "category": "POC"
+        "command": "froggy-agent.sayHello",
+        "title": "Froggy Agent: Say Hello",
+        "category": "Froggy Agent"
       },
       {
-        "command": "poc-vscode-addin.askAi",
-        "title": "POC: Ask AI",
-        "category": "POC",
+        "command": "froggy-agent.askAi",
+        "title": "Froggy Agent: Ask AI",
+        "category": "Froggy Agent",
         "icon": "$(sparkle)"
       },
       {
-        "command": "poc-vscode-addin.newSession",
-        "title": "POC: New Discussion",
-        "category": "POC",
+        "command": "froggy-agent.newSession",
+        "title": "Froggy Agent: New Discussion",
+        "category": "Froggy Agent",
         "icon": "$(plus)"
       },
       {
-        "command": "poc-vscode-addin.clearSession",
-        "title": "POC: Clear Discussion",
-        "category": "POC",
+        "command": "froggy-agent.clearSession",
+        "title": "Froggy Agent: Clear Discussion",
+        "category": "Froggy Agent",
         "icon": "$(clear-all)"
       },
       {
-        "command": "poc-vscode-addin.openMainChat",
-        "title": "POC: Open Main Chat",
-        "category": "POC",
+        "command": "froggy-agent.openMainChat",
+        "title": "Froggy Agent: Open Main Chat",
+        "category": "Froggy Agent",
         "icon": "$(comment-discussion)"
       },
       {
-        "command": "poc-vscode-addin.refreshExplorer",
-        "title": "POC: Refresh Explorer",
-        "category": "POC",
+        "command": "froggy-agent.refreshExplorer",
+        "title": "Froggy Agent: Refresh Explorer",
+        "category": "Froggy Agent",
         "icon": "$(refresh)"
       },
       {
-        "command": "poc-vscode-addin.copyFile",
+        "command": "froggy-agent.copyFile",
         "title": "Copy",
-        "category": "POC"
+        "category": "Froggy Agent"
       },
       {
-        "command": "poc-vscode-addin.pasteFile",
+        "command": "froggy-agent.pasteFile",
         "title": "Paste",
-        "category": "POC"
+        "category": "Froggy Agent"
       },
       {
-        "command": "poc-vscode-addin.renameFile",
+        "command": "froggy-agent.renameFile",
         "title": "Rename",
-        "category": "POC"
+        "category": "Froggy Agent"
       },
       {
-        "command": "poc-vscode-addin.deleteFile",
+        "command": "froggy-agent.deleteFile",
         "title": "Delete",
-        "category": "POC"
+        "category": "Froggy Agent"
       },
       {
-        "command": "poc-vscode-addin.revealFile",
+        "command": "froggy-agent.revealFile",
         "title": "Reveal in File Explorer",
-        "category": "POC"
+        "category": "Froggy Agent"
       },
       {
-        "command": "poc-vscode-addin.copyPath",
+        "command": "froggy-agent.copyPath",
         "title": "Copy Path",
-        "category": "POC"
+        "category": "Froggy Agent"
       },
       {
-        "command": "poc-vscode-addin.copyRelativePath",
+        "command": "froggy-agent.copyRelativePath",
         "title": "Copy Relative Path",
-        "category": "POC"
+        "category": "Froggy Agent"
       },
       {
-        "command": "poc-vscode-addin.newFile",
+        "command": "froggy-agent.newFile",
         "title": "New File",
-        "category": "POC",
+        "category": "Froggy Agent",
         "icon": "$(new-file)"
       },
       {
-        "command": "poc-vscode-addin.newFolder",
+        "command": "froggy-agent.newFolder",
         "title": "New Folder",
-        "category": "POC",
+        "category": "Froggy Agent",
         "icon": "$(new-folder)"
       },
       {
-        "command": "poc-vscode-addin.deleteSkill",
+        "command": "froggy-agent.deleteSkill",
         "title": "Archive",
-        "category": "POC"
+        "category": "Froggy Agent"
       },
       {
-        "command": "poc-vscode-addin.restoreSkill",
+        "command": "froggy-agent.restoreSkill",
         "title": "Restore",
-        "category": "POC"
+        "category": "Froggy Agent"
       },
       {
-        "command": "poc-vscode-addin.deleteSkillPermanently",
+        "command": "froggy-agent.deleteSkillPermanently",
         "title": "Delete",
-        "category": "POC"
+        "category": "Froggy Agent"
       },
       {
-        "command": "poc-vscode-addin.deleteSession",
+        "command": "froggy-agent.deleteSession",
         "title": "Archive",
-        "category": "POC"
+        "category": "Froggy Agent"
       },
       {
-        "command": "poc-vscode-addin.restoreSession",
+        "command": "froggy-agent.restoreSession",
         "title": "Restore",
-        "category": "POC"
+        "category": "Froggy Agent"
       },
       {
-        "command": "poc-vscode-addin.deleteSessionPermanently",
+        "command": "froggy-agent.deleteSessionPermanently",
         "title": "Delete",
-        "category": "POC"
+        "category": "Froggy Agent"
       }
     ],
     "menus": {
       "view/title": [
         {
-          "command": "poc-vscode-addin.newFile",
-          "when": "view == pocFilesView",
+          "command": "froggy-agent.newFile",
+          "when": "view == froggyFilesView",
           "group": "navigation"
         },
         {
-          "command": "poc-vscode-addin.newFolder",
-          "when": "view == pocFilesView",
+          "command": "froggy-agent.newFolder",
+          "when": "view == froggyFilesView",
           "group": "navigation"
         },
         {
-          "command": "poc-vscode-addin.refreshExplorer",
-          "when": "view == pocFilesView || view == pocSkillsView",
+          "command": "froggy-agent.refreshExplorer",
+          "when": "view == froggyFilesView || view == froggySkillsView",
           "group": "navigation"
         },
         {
-          "command": "poc-vscode-addin.newSession",
-          "when": "view == pocAskAiView || view == pocSessionsView",
+          "command": "froggy-agent.newSession",
+          "when": "view == froggyAskAiView || view == froggySessionsView",
           "group": "navigation"
         },
         {
-          "command": "poc-vscode-addin.clearSession",
-          "when": "view == pocAskAiView",
+          "command": "froggy-agent.clearSession",
+          "when": "view == froggyAskAiView",
           "group": "navigation"
         },
         {
-          "command": "poc-vscode-addin.pasteFile",
-          "when": "view == pocFilesView && pocFilesClipboardHasData",
+          "command": "froggy-agent.pasteFile",
+          "when": "view == froggyFilesView && froggyFilesClipboardHasData",
           "group": "navigation"
         }
       ],
       "view/item/context": [
         {
-          "command": "poc-vscode-addin.newFile",
-          "when": "view == pocFilesView",
+          "command": "froggy-agent.newFile",
+          "when": "view == froggyFilesView",
           "group": "0_new"
         },
         {
-          "command": "poc-vscode-addin.newFolder",
-          "when": "view == pocFilesView",
+          "command": "froggy-agent.newFolder",
+          "when": "view == froggyFilesView",
           "group": "0_new"
         },
         {
-          "command": "poc-vscode-addin.copyFile",
-          "when": "view == pocFilesView && (viewItem == dataFile || viewItem == dataFolder)",
+          "command": "froggy-agent.copyFile",
+          "when": "view == froggyFilesView && (viewItem == dataFile || viewItem == dataFolder)",
           "group": "1_clipboard"
         },
         {
-          "command": "poc-vscode-addin.pasteFile",
-          "when": "view == pocFilesView && (viewItem == dataFile || viewItem == dataFolder) && pocFilesClipboardHasData",
+          "command": "froggy-agent.pasteFile",
+          "when": "view == froggyFilesView && (viewItem == dataFile || viewItem == dataFolder) && froggyFilesClipboardHasData",
           "group": "1_clipboard"
         },
         {
-          "command": "poc-vscode-addin.renameFile",
-          "when": "view == pocFilesView && (viewItem == dataFile || viewItem == dataFolder)",
+          "command": "froggy-agent.renameFile",
+          "when": "view == froggyFilesView && (viewItem == dataFile || viewItem == dataFolder)",
           "group": "2_modify"
         },
         {
-          "command": "poc-vscode-addin.deleteFile",
-          "when": "view == pocFilesView && (viewItem == dataFile || viewItem == dataFolder)",
+          "command": "froggy-agent.deleteFile",
+          "when": "view == froggyFilesView && (viewItem == dataFile || viewItem == dataFolder)",
           "group": "2_modify"
         },
         {
-          "command": "poc-vscode-addin.revealFile",
-          "when": "view == pocFilesView && (viewItem == dataFile || viewItem == dataFolder)",
+          "command": "froggy-agent.revealFile",
+          "when": "view == froggyFilesView && (viewItem == dataFile || viewItem == dataFolder)",
           "group": "3_paths"
         },
         {
-          "command": "poc-vscode-addin.copyPath",
-          "when": "view == pocFilesView && (viewItem == dataFile || viewItem == dataFolder)",
+          "command": "froggy-agent.copyPath",
+          "when": "view == froggyFilesView && (viewItem == dataFile || viewItem == dataFolder)",
           "group": "3_paths"
         },
         {
-          "command": "poc-vscode-addin.copyRelativePath",
-          "when": "view == pocFilesView && (viewItem == dataFile || viewItem == dataFolder)",
+          "command": "froggy-agent.copyRelativePath",
+          "when": "view == froggyFilesView && (viewItem == dataFile || viewItem == dataFolder)",
           "group": "3_paths"
         },
         {
-          "command": "poc-vscode-addin.deleteSkill",
-          "when": "view == pocSkillsView && viewItem == skill",
+          "command": "froggy-agent.deleteSkill",
+          "when": "view == froggySkillsView && viewItem == skill",
           "group": "2_modify"
         },
         {
-          "command": "poc-vscode-addin.restoreSkill",
-          "when": "view == pocSkillsView && viewItem == archivedSkill",
+          "command": "froggy-agent.restoreSkill",
+          "when": "view == froggySkillsView && viewItem == archivedSkill",
           "group": "2_modify"
         },
         {
-          "command": "poc-vscode-addin.deleteSkillPermanently",
-          "when": "view == pocSkillsView && viewItem == archivedSkill",
+          "command": "froggy-agent.deleteSkillPermanently",
+          "when": "view == froggySkillsView && viewItem == archivedSkill",
           "group": "2_modify"
         },
         {
-          "command": "poc-vscode-addin.deleteSession",
-          "when": "view == pocSessionsView && viewItem == session",
+          "command": "froggy-agent.deleteSession",
+          "when": "view == froggySessionsView && viewItem == session",
           "group": "2_modify"
         },
         {
-          "command": "poc-vscode-addin.restoreSession",
-          "when": "view == pocSessionsView && viewItem == archivedSession",
+          "command": "froggy-agent.restoreSession",
+          "when": "view == froggySessionsView && viewItem == archivedSession",
           "group": "2_modify"
         },
         {
-          "command": "poc-vscode-addin.deleteSessionPermanently",
-          "when": "view == pocSessionsView && viewItem == archivedSession",
+          "command": "froggy-agent.deleteSessionPermanently",
+          "when": "view == froggySessionsView && viewItem == archivedSession",
           "group": "2_modify"
         }
       ],
       "view/context": [
         {
-          "command": "poc-vscode-addin.newFile",
-          "when": "view == pocFilesView",
+          "command": "froggy-agent.newFile",
+          "when": "view == froggyFilesView",
           "group": "0_new"
         },
         {
-          "command": "poc-vscode-addin.newFolder",
-          "when": "view == pocFilesView",
+          "command": "froggy-agent.newFolder",
+          "when": "view == froggyFilesView",
           "group": "0_new"
         },
         {
-          "command": "poc-vscode-addin.pasteFile",
-          "when": "view == pocFilesView && pocFilesClipboardHasData",
+          "command": "froggy-agent.pasteFile",
+          "when": "view == froggyFilesView && froggyFilesClipboardHasData",
           "group": "1_clipboard"
         }
       ],
       "commandPalette": [
         {
-          "command": "poc-vscode-addin.copyFile",
+          "command": "froggy-agent.copyFile",
           "when": "never"
         },
         {
-          "command": "poc-vscode-addin.pasteFile",
+          "command": "froggy-agent.pasteFile",
           "when": "never"
         },
         {
-          "command": "poc-vscode-addin.renameFile",
+          "command": "froggy-agent.renameFile",
           "when": "never"
         },
         {
-          "command": "poc-vscode-addin.deleteFile",
+          "command": "froggy-agent.deleteFile",
           "when": "never"
         },
         {
-          "command": "poc-vscode-addin.revealFile",
+          "command": "froggy-agent.revealFile",
           "when": "never"
         },
         {
-          "command": "poc-vscode-addin.copyPath",
+          "command": "froggy-agent.copyPath",
           "when": "never"
         },
         {
-          "command": "poc-vscode-addin.copyRelativePath",
+          "command": "froggy-agent.copyRelativePath",
           "when": "never"
         },
         {
-          "command": "poc-vscode-addin.newFile",
+          "command": "froggy-agent.newFile",
           "when": "never"
         },
         {
-          "command": "poc-vscode-addin.newFolder",
+          "command": "froggy-agent.newFolder",
           "when": "never"
         },
         {
-          "command": "poc-vscode-addin.deleteSkill",
+          "command": "froggy-agent.deleteSkill",
           "when": "never"
         },
         {
-          "command": "poc-vscode-addin.restoreSkill",
+          "command": "froggy-agent.restoreSkill",
           "when": "never"
         },
         {
-          "command": "poc-vscode-addin.deleteSkillPermanently",
+          "command": "froggy-agent.deleteSkillPermanently",
           "when": "never"
         },
         {
-          "command": "poc-vscode-addin.deleteSession",
+          "command": "froggy-agent.deleteSession",
           "when": "never"
         },
         {
-          "command": "poc-vscode-addin.restoreSession",
+          "command": "froggy-agent.restoreSession",
           "when": "never"
         },
         {
-          "command": "poc-vscode-addin.deleteSessionPermanently",
+          "command": "froggy-agent.deleteSessionPermanently",
           "when": "never"
         }
       ]
     },
     "languageModelTools": [
       {
-        "name": "pocGoogleSearch",
+        "name": "froggyGoogleSearch",
         "displayName": "Google Search in VS Code",
         "userDescription": "Open a Google search in the VS Code Simple Browser.",
-        "modelDescription": "Opens a Google search for the given query in the VS Code Simple Browser (an editor tab inside VS Code). Use when the user asks to SEE search results in a browser. When the user asks YOU to search the internet and answer from it (\"using internet\", current prices, news), use the \"pocWebSearch\" tool instead: it returns readable results for you to summarize.",
+        "modelDescription": "Opens a Google search for the given query in the VS Code Simple Browser (an editor tab inside VS Code). Use when the user asks to SEE search results in a browser. When the user asks YOU to search the internet and answer from it (\"using internet\", current prices, news), use the \"froggyWebSearch\" tool instead: it returns readable results for you to summarize.",
         "canBeReferencedInPrompt": true,
         "toolReferenceName": "googleSearch",
         "inputSchema": {
@@ -380,10 +380,10 @@
         }
       },
       {
-        "name": "pocWebSearch",
+        "name": "froggyWebSearch",
         "displayName": "Search the Internet",
         "userDescription": "Search the internet and return readable results.",
-        "modelDescription": "Searches the internet for the given query and returns readable results: an instant answer with its source, a market quote for known indices, stocks, commodities and crypto (S&P 500, NASDAQ, gold, bitcoin, ...), related links and Wikipedia matches. Use when the user asks to use the internet or search the web (\"using internet\", \"on the internet\"), or needs fresh or external facts you cannot know: current prices, news, documentation. Summarize the results with their sources; never invent facts the results do not contain. If the results point at a page worth reading in full, read it with the \"pocFetchWebPage\" tool.",
+        "modelDescription": "Searches the internet for the given query and returns readable results: an instant answer with its source, a market quote for known indices, stocks, commodities and crypto (S&P 500, NASDAQ, gold, bitcoin, ...), related links and Wikipedia matches. Use when the user asks to use the internet or search the web (\"using internet\", \"on the internet\"), or needs fresh or external facts you cannot know: current prices, news, documentation. Summarize the results with their sources; never invent facts the results do not contain. If the results point at a page worth reading in full, read it with the \"froggyFetchWebPage\" tool.",
         "canBeReferencedInPrompt": true,
         "toolReferenceName": "webSearch",
         "inputSchema": {
@@ -399,10 +399,10 @@
         }
       },
       {
-        "name": "pocFetchWebPage",
+        "name": "froggyFetchWebPage",
         "displayName": "Read Web Page",
         "userDescription": "Fetch a web page and return its readable text.",
-        "modelDescription": "Fetches an http(s) page and returns its readable text (truncated to 8000 characters). Use after \"pocWebSearch\" to read a promising result in full, or when the user gives a URL and asks to summarize or read it. Only public web pages: local and private-network URLs are refused.",
+        "modelDescription": "Fetches an http(s) page and returns its readable text (truncated to 8000 characters). Use after \"froggyWebSearch\" to read a promising result in full, or when the user gives a URL and asks to summarize or read it. Only public web pages: local and private-network URLs are refused.",
         "canBeReferencedInPrompt": true,
         "toolReferenceName": "fetchWebPage",
         "inputSchema": {
@@ -418,7 +418,7 @@
         }
       },
       {
-        "name": "pocDateTime",
+        "name": "froggyDateTime",
         "displayName": "Current Date and Time",
         "userDescription": "Read the current date and time.",
         "modelDescription": "Returns the current date and time. Use when the user asks for the time, date, day of the week, or anything time-sensitive.",
@@ -431,7 +431,7 @@
         }
       },
       {
-        "name": "pocReadDataFile",
+        "name": "froggyReadDataFile",
         "displayName": "Read Data File",
         "userDescription": "Read a file from the workspace data folder.",
         "modelDescription": "Reads a text file from the workspace data folder (<workspace>/data). The path is relative to that folder, e.g. \"notes/todo.md\" — never use absolute paths. Use when the user asks to summarize, explain, quote or analyze a file. Files the user mentions without a folder are always in the data folder. Only files inside the data folder can be read.",
@@ -450,7 +450,7 @@
         }
       },
       {
-        "name": "pocRunSkill",
+        "name": "froggyRunSkill",
         "displayName": "Run Skill Script",
         "userDescription": "Run a skill's pre-designed Python script.",
         "modelDescription": "Runs a pre-designed Python script for a workspace skill: <workspace>/.github/skills/<skill>/run.py. The skill is the skill folder name; pass an empty skill to list the runnable skills (with their titles) instead of running one. Optional args are passed to the script; paths inside args are relative to the workspace root (e.g. \"data/notes.md\"). Scripts run with the workspace .venv interpreter when present, else PATH python, with a 60s timeout. A skill shipping requirements.txt gets it installed into the workspace .venv (created when missing) before running. Use when the user asks to run a skill, or when a skill matches the request.",
@@ -476,7 +476,7 @@
         }
       },
       {
-        "name": "pocCreateSkill",
+        "name": "froggyCreateSkill",
         "displayName": "Create Skill",
         "userDescription": "Build a new workspace skill (SKILL.md plus a Python run.py script) for a task.",
         "modelDescription": "Delegates to a dedicated Python-developer agent that builds a new runnable workspace skill (.github/skills/<name>/SKILL.md plus run.py) automating the given task as a command-line Python script. Use when the user asks to create, add or generate a skill, or to automate a recurring task for reuse. The skill name is optional: pass a short lowercase slug (letters, digits, hyphens) or omit it to derive one from the task. The new skill is syntax-checked and immediately runnable via the skill runner. The factory always implements the skill as a Python script: describe the goal and expected output in the task, not an implementation. Third-party needs are declared in requirements.txt and installed at run time.",
@@ -499,7 +499,7 @@
         }
       },
       {
-        "name": "pocAskQuestions",
+        "name": "froggyAskQuestions",
         "displayName": "Ask User Questions",
         "userDescription": "Ask the user up to 4 questions with options.",
         "modelDescription": "Asks the user up to 4 questions (each with optional options) and returns their answers. Use when a value you need is missing or ambiguous — a file, a count, a scope, a choice — instead of guessing. Prefer concrete options the user can click. Never ask about things you can find out with your other tools or from the conversation.",
@@ -540,7 +540,7 @@
         }
       },
       {
-        "name": "pocListDataFiles",
+        "name": "froggyListDataFiles",
         "displayName": "List Data Files",
         "userDescription": "List files in the workspace data folder.",
         "modelDescription": "Lists files and subfolders in the workspace data folder (<workspace>/data). The optional path is a subfolder relative to that folder; omit it to list the root. Use to discover which files exist before reading one.",
@@ -558,7 +558,7 @@
         }
       },
       {
-        "name": "pocRunTerminal",
+        "name": "froggyRunTerminal",
         "displayName": "Run Terminal Command",
         "userDescription": "Run a shell command and return its output.",
         "modelDescription": "Runs a shell command from the workspace root and returns its truncated output (60s timeout). Use when the user asks to run, execute or check something on this machine. The command must use OS-matching syntax from the system preamble. The optional explanation is one short sentence describing what the command does; it is shown to the user in the confirmation card.",
@@ -581,7 +581,7 @@
         }
       },
       {
-        "name": "pocOpenBrowserPage",
+        "name": "froggyOpenBrowserPage",
         "displayName": "Open Browser Page",
         "userDescription": "Open any web page in the VS Code Simple Browser.",
         "modelDescription": "Opens the given web page in the VS Code Simple Browser (an editor tab inside VS Code). Use when the user asks to open, show or visit a page or site. Only http(s) URLs.",
@@ -600,7 +600,7 @@
         }
       },
       {
-        "name": "pocReadMemory",
+        "name": "froggyReadMemory",
         "displayName": "Read Memory",
         "userDescription": "Read the workspace memory.md file.",
         "modelDescription": "Reads memory.md at the workspace root: facts the user asked to remember (name, preferences, ...). Use when the user asks what you remember or know about them, or refers to something memorized. Never claim to remember something without reading this file first.",
@@ -613,7 +613,7 @@
         }
       },
       {
-        "name": "pocAppendMemory",
+        "name": "froggyAppendMemory",
         "displayName": "Memorize in Memory",
         "userDescription": "Append one fact to the workspace memory.md file.",
         "modelDescription": "Appends one short fact to memory.md at the workspace root (one line, e.g. the user's name). Use when the user asks to remember, memorize, note or save something (including French: memorise, retiens, souviens-toi, note). One fact per call. Never claim something is memorized without calling this tool.",
@@ -633,14 +633,14 @@
       }
     ],
     "configuration": {
-      "title": "POC VSCode Addin",
+      "title": "Froggy Agent",
       "properties": {
-        "poc-vscode-addin.model": {
+        "froggy-agent.model": {
           "type": "string",
           "default": "auto",
           "description": "Chat model for Ask AI: \"auto\" (default) uses the first available model, or a model id, name, family or \"vendor/family\" as shown in the model picker (e.g. an Ollama model). The effective model is shown in the Ask AI panel badge."
         },
-        "poc-vscode-addin.tools": {
+        "froggy-agent.tools": {
           "type": "array",
           "items": {
             "type": "string"
@@ -648,19 +648,19 @@
           "default": [],
           "description": "Extra tool names offered to the Ask AI model, on top of the builtins (date/time, data files, browser, web search, skills, terminal). Names that match no registered tool are silently ignored. External action tools may show VS Code's own popup in addition to the in-chat card. Empty array (default) keeps builtins only: every confirmation happens in-chat."
         },
-        "poc-vscode-addin.confirmTools": {
+        "froggy-agent.confirmTools": {
           "type": "array",
           "items": {
             "type": "string"
           },
           "default": [
-            "pocRunTerminal",
+            "froggyRunTerminal",
             "run_in_terminal",
             "send_to_terminal",
-            "pocRunSkill",
-            "pocCreateSkill"
+            "froggyRunSkill",
+            "froggyCreateSkill"
           ],
-          "description": "Tool names asking for a Continue/Cancel confirmation before running. Reads outside the workspace data folder are only possible through these tools. Empty array disables confirmation. The builtin pocRunTerminal replaces run_in_terminal/send_to_terminal, which would also show VS Code's own popup on top of the in-chat card."
+          "description": "Tool names asking for a Continue/Cancel confirmation before running. Reads outside the workspace data folder are only possible through these tools. Empty array disables confirmation. The builtin froggyRunTerminal replaces run_in_terminal/send_to_terminal, which would also show VS Code's own popup on top of the in-chat card."
         }
       }
     }

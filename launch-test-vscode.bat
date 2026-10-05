@@ -39,6 +39,6 @@ exit /b 1
 
 echo.
 echo Fenetre "[Extension Development Host]" en cours d'ouverture...
-echo Pour ouvrir le chat : Ctrl+Shift+P puis "POC: Open Main Chat".
+echo Pour ouvrir le chat : Ctrl+Shift+P puis "Froggy Agent: Open Main Chat".
 echo (Re double-cliquer ce script apres chaque modification du code pour recompiler.)
 endlocal

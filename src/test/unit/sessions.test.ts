@@ -109,8 +109,8 @@ suite('sessions', () => {
   });
 
   test('declinedToolResultText names the tool and tells the model to move on', () => {
-    const text = declinedToolResultText('pocRunSkill');
-    assert.ok(text.includes('pocRunSkill'));
+    const text = declinedToolResultText('froggyRunSkill');
+    assert.ok(text.includes('froggyRunSkill'));
     assert.match(text, /Do not retry it/);
   });
 
@@ -134,8 +134,8 @@ suite('sessions', () => {
         role: 'assistant',
         text: 'here they are',
         toolRuns: [
-          { tool: 'pocListDataFiles', input: {}, output: 'a.md', decision: 'auto' },
-          { tool: 'pocRunSkill', input: { skill: '' }, decision: 'declined' }
+          { tool: 'froggyListDataFiles', input: {}, output: 'a.md', decision: 'auto' },
+          { tool: 'froggyRunSkill', input: { skill: '' }, decision: 'declined' }
         ]
       }
     ]);
@@ -146,11 +146,11 @@ suite('sessions', () => {
     if (round.kind === 'toolRound') {
       assert.strictEqual(round.calls.length, 2);
       assert.strictEqual(round.calls[0].callId, 'hist-1-0');
-      assert.strictEqual(round.calls[0].tool, 'pocListDataFiles');
+      assert.strictEqual(round.calls[0].tool, 'froggyListDataFiles');
       assert.deepStrictEqual(round.calls[0].input, {});
       assert.strictEqual(round.calls[0].resultText, 'a.md');
       assert.strictEqual(round.calls[1].callId, 'hist-1-1');
-      assert.match(round.calls[1].resultText, /declined to run the "pocRunSkill" tool/);
+      assert.match(round.calls[1].resultText, /declined to run the "froggyRunSkill" tool/);
     }
     assert.deepStrictEqual(items[2], { kind: 'assistant', text: 'here they are' });
   });
@@ -161,8 +161,8 @@ suite('sessions', () => {
         role: 'assistant',
         text: '',
         toolRuns: [
-          { tool: 'pocRunTerminal', input: 'dir', decision: 'auto' },
-          { tool: 'pocDateTime', input: null, output: 'now', decision: 'auto' }
+          { tool: 'froggyRunTerminal', input: 'dir', decision: 'auto' },
+          { tool: 'froggyDateTime', input: null, output: 'now', decision: 'auto' }
         ]
       }
     ]);
@@ -191,7 +191,7 @@ suite('sessions', () => {
       {
         role: 'assistant',
         text: 'a',
-        toolRuns: [{ tool: 'pocDateTime', input: {}, output: 'now', decision: 'auto' }]
+        toolRuns: [{ tool: 'froggyDateTime', input: {}, output: 'now', decision: 'auto' }]
       },
       1002
     );

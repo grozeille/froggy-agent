@@ -66,8 +66,8 @@ suite('dataFiles', () => {
     const tools = readToolDefs();
     const read = tools.find((tool) => tool.name === READ_DATA_FILE_TOOL_NAME);
     const list = tools.find((tool) => tool.name === LIST_DATA_FILES_TOOL_NAME);
-    assert.ok(read, 'pocReadDataFile should be contributed');
-    assert.ok(list, 'pocListDataFiles should be contributed');
+    assert.ok(read, 'froggyReadDataFile should be contributed');
+    assert.ok(list, 'froggyListDataFiles should be contributed');
     assert.deepStrictEqual(read.inputSchema.required, ['path']);
     assert.match(read.modelDescription, /data folder/);
     assert.match(read.modelDescription, /relative/);

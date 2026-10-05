@@ -23,6 +23,6 @@ suite('openPage', () => {
   });
 
   test('tool name is defined', () => {
-    assert.strictEqual(OPEN_PAGE_TOOL_NAME, 'pocOpenBrowserPage');
+    assert.strictEqual(OPEN_PAGE_TOOL_NAME, 'froggyOpenBrowserPage');
   });
 });

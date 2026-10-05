@@ -2,4 +2,4 @@
 
 ## 0.0.1
 
-- Initial POC: sidebar counter webview with two-way message passing.
+- Initial release: sidebar counter webview with two-way message passing.

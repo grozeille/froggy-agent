@@ -67,7 +67,7 @@ suite('fetchPage', () => {
   });
 
   test('tool name matches the package.json contribution', () => {
-    assert.strictEqual(FETCH_PAGE_TOOL_NAME, 'pocFetchWebPage');
+    assert.strictEqual(FETCH_PAGE_TOOL_NAME, 'froggyFetchWebPage');
   });
 });
 
