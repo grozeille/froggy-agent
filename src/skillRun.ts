@@ -1,7 +1,7 @@
 import * as path from 'path';
 
 /** Tool name must match the `languageModelTools` contribution in package.json. */
-export const RUN_SKILL_TOOL_NAME = 'pocRunSkill';
+export const RUN_SKILL_TOOL_NAME = 'froggyRunSkill';
 
 /** Executable skills are `.github/skills/<name>/` folders containing this script. */
 export const SKILLS_DIR_NAME = '.github/skills';

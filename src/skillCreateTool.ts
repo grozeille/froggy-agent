@@ -160,7 +160,7 @@ export class CreateSkillTool implements vscode.LanguageModelTool<CreateSkillTool
   ): Promise<string> {
     const models = await vscode.lm.selectChatModels();
     const setting = vscode.workspace
-      .getConfiguration('poc-vscode-addin')
+      .getConfiguration('froggy-agent')
       .get<string>(MODEL_SETTING_KEY, MODEL_SETTING_DEFAULT);
     const model = pickChatModel(models, setting);
     const response = await model.sendRequest(

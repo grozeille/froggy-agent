@@ -1,4 +1,4 @@
-/** Setting `poc-vscode-addin.tools`: extra tool names offered to the model. */
+/** Setting `froggy-agent.tools`: extra tool names offered to the model. */
 export const TOOL_SETTING_KEY = 'tools';
 
 /**
@@ -9,7 +9,7 @@ export const TOOL_SETTING_KEY = 'tools';
  */
 export const TOOL_SETTING_DEFAULT: readonly string[] = [];
 
-/** Setting `poc-vscode-addin.confirmTools`: tools needing user confirmation. */
+/** Setting `froggy-agent.confirmTools`: tools needing user confirmation. */
 export const CONFIRM_SETTING_KEY = 'confirmTools';
 
 /**
@@ -19,15 +19,15 @@ export const CONFIRM_SETTING_KEY = 'confirmTools';
  * through these, so gating them covers that too.
  */
 export const CONFIRM_SETTING_DEFAULT: readonly string[] = [
-  'pocRunTerminal',
+  'froggyRunTerminal',
   'run_in_terminal',
   'send_to_terminal',
-  'pocRunSkill',
-  'pocCreateSkill'
+  'froggyRunSkill',
+  'froggyCreateSkill'
 ];
 
 /**
- * External terminal tools superseded by the builtin `pocRunTerminal`: they
+ * External terminal tools superseded by the builtin `froggyRunTerminal`: they
  * stay usable but are not offered to the model when the builtin is available,
  * because invoking them would show VS Code's own confirmation popup on top
  * of the in-chat card (double prompt for a single run).
@@ -97,7 +97,7 @@ export function describeToolCall(
   input: unknown,
   maxChars: number
 ): ToolCallDescription {
-  if (toolName === 'pocRunTerminal' || EXTERNAL_TERMINAL_TOOL_NAMES.includes(toolName)) {
+  if (toolName === 'froggyRunTerminal' || EXTERNAL_TERMINAL_TOOL_NAMES.includes(toolName)) {
     const command = stringField(input, ['command', 'text', 'value']);
     if (command) {
       const explanation = stringField(input, ['explanation', 'goal']);
@@ -105,7 +105,7 @@ export function describeToolCall(
       return { title: 'Run this command?', detail: truncateDetail(detail, maxChars) };
     }
   }
-  if (toolName === 'pocRunSkill') {
+  if (toolName === 'froggyRunSkill') {
     const skill = stringField(input, ['skill']);
     if (!skill) {
       return { title: 'List the runnable skills?', detail: summarizeToolInput(input, maxChars) };
@@ -120,7 +120,7 @@ export function describeToolCall(
       detail: truncateDetail(lines.join('\n'), maxChars)
     };
   }
-  if (toolName === 'pocCreateSkill') {
+  if (toolName === 'froggyCreateSkill') {
     const skill = stringField(input, ['skill']);
     const task = stringField(input, ['task']);
     const lines: string[] = [];

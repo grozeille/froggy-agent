@@ -187,8 +187,8 @@ suite('skillCreate', () => {
   });
 
   test('create-skill hint names the tool and claims creation requests', () => {
-    const hint = formatCreateSkillHint('pocCreateSkill');
-    assert.ok(hint.includes('"pocCreateSkill"'), 'names the tool');
+    const hint = formatCreateSkillHint('froggyCreateSkill');
+    assert.ok(hint.includes('"froggyCreateSkill"'), 'names the tool');
     assert.match(hint, /create/);
     assert.match(hint, /automate/);
     assert.match(hint, /instead of writing/);
@@ -197,34 +197,34 @@ suite('skillCreate', () => {
   });
 
   test('summary names the skill, description and runner', () => {
-    const summary = formatCreatedSkillSummary('count-words', 'Count words.', 'pocRunSkill');
+    const summary = formatCreatedSkillSummary('count-words', 'Count words.', 'froggyRunSkill');
     assert.ok(summary.includes('"count-words"'), 'names the skill');
     assert.ok(summary.includes('.github/skills/count-words/'), 'shows the folder');
     assert.ok(summary.includes('Count words.'), 'shows the description');
-    assert.ok(summary.includes('"pocRunSkill"'), 'names the runner');
+    assert.ok(summary.includes('"froggyRunSkill"'), 'names the runner');
     assert.ok(summary.includes('syntax-checked'), 'mentions the check');
   });
 
   test('summary appends the environment note when given', () => {
-    const summary = formatCreatedSkillSummary('x', 'Y.', 'pocRunSkill', ' Created the venv.');
+    const summary = formatCreatedSkillSummary('x', 'Y.', 'froggyRunSkill', ' Created the venv.');
     assert.ok(summary.endsWith(' Created the venv.'), 'appends the note');
     assert.ok(
-      !formatCreatedSkillSummary('x', 'Y.', 'pocRunSkill').includes('.venv'),
+      !formatCreatedSkillSummary('x', 'Y.', 'froggyRunSkill').includes('.venv'),
       'stays silent without a note'
     );
   });
 
   test('summary names requirements.txt when present', () => {
-    const summary = formatCreatedSkillSummary('x', 'Y.', 'pocRunSkill', '', true);
+    const summary = formatCreatedSkillSummary('x', 'Y.', 'froggyRunSkill', '', true);
     assert.ok(summary.includes('requirements.txt'), 'names requirements.txt');
     assert.ok(
-      !formatCreatedSkillSummary('x', 'Y.', 'pocRunSkill').includes('requirements.txt'),
+      !formatCreatedSkillSummary('x', 'Y.', 'froggyRunSkill').includes('requirements.txt'),
       'omits it otherwise'
     );
   });
 
   test('tool and file names match the package.json contribution', () => {
-    assert.strictEqual(CREATE_SKILL_TOOL_NAME, 'pocCreateSkill');
+    assert.strictEqual(CREATE_SKILL_TOOL_NAME, 'froggyCreateSkill');
     assert.strictEqual(SKILL_MD_NAME, 'SKILL.md');
     assert.strictEqual(REQUIREMENTS_MARKER, '---REQUIREMENTS.TXT---');
   });

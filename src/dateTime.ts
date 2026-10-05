@@ -1,4 +1,4 @@
-export const DATE_TIME_TOOL_NAME = 'pocDateTime';
+export const DATE_TIME_TOOL_NAME = 'froggyDateTime';
 
 export function describeDateTime(date: Date, timeZone?: string): string {
   const format = new Intl.DateTimeFormat('en-GB', {

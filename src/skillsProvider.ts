@@ -37,7 +37,7 @@ async function readFolderNames(dir: vscode.Uri): Promise<string[] | undefined> {
 }
 
 export class SkillsProvider implements vscode.TreeDataProvider<vscode.TreeItem> {
-  public static readonly viewId = 'pocSkillsView';
+  public static readonly viewId = 'froggySkillsView';
 
   private readonly _onDidChangeTreeData = new vscode.EventEmitter<vscode.TreeItem | undefined>();
   public readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
@@ -115,7 +115,7 @@ export class SkillsProvider implements vscode.TreeDataProvider<vscode.TreeItem> 
       }
       if (exists) {
         item.command = {
-          command: 'poc-vscode-addin.openPreview',
+          command: 'froggy-agent.openPreview',
           title: 'Open Skill Preview',
           arguments: [skillMd]
         };

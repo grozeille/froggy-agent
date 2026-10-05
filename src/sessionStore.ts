@@ -12,7 +12,7 @@ import {
   type ChatSession
 } from './sessions';
 
-const STORAGE_KEY = 'poc.sessions.v1';
+const STORAGE_KEY = 'froggy.sessions.v1';
 
 export class SessionStore implements vscode.Disposable {
   private _sessions: ChatSession[] = [];

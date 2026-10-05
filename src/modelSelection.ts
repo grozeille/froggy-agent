@@ -1,4 +1,4 @@
-/** Setting `poc-vscode-addin.model`: which chat model Ask AI uses. */
+/** Setting `froggy-agent.model`: which chat model Ask AI uses. */
 export const MODEL_SETTING_KEY = 'model';
 export const MODEL_SETTING_DEFAULT = 'auto';
 

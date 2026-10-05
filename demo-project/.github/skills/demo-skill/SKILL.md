@@ -1,6 +1,6 @@
 # Demo Skill
 
-This is a sample skill used to preview the Skills section of the POC sidebar.
+This is a sample skill used to preview the Skills section of the Froggy Agent sidebar.
 
 ## What it does
 

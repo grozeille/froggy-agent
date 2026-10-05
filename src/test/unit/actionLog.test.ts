@@ -27,13 +27,13 @@ suite('actionLog', () => {
   test('formatActionLog renders each run with decision and output', () => {
     const text = formatActionLog([
       entry(),
-      entry({ tool: 'pocRunSkill', decision: 'declined', output: undefined })
+      entry({ tool: 'froggyRunSkill', decision: 'declined', output: undefined })
     ]);
     assert.match(text, /run_in_terminal/);
     assert.match(text, /\{"command":"dir"\}/);
     assert.match(text, /approved/);
     assert.match(text, /file1\.txt/);
-    assert.match(text, /pocRunSkill/);
+    assert.match(text, /froggyRunSkill/);
     assert.match(text, /declined/);
   });
 

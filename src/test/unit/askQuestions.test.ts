@@ -89,13 +89,13 @@ suite('askQuestions', () => {
   });
 
   test('hint names the tool and its shape', () => {
-    const hint = formatAskQuestionsHint('pocAskQuestions');
-    assert.ok(hint.includes('"pocAskQuestions"'), 'names the tool');
+    const hint = formatAskQuestionsHint('froggyAskQuestions');
+    assert.ok(hint.includes('"froggyAskQuestions"'), 'names the tool');
     assert.match(hint, /up to 4 questions/);
     assert.match(hint, /instead of guessing/);
   });
 
   test('tool name matches the package.json contribution', () => {
-    assert.strictEqual(ASK_QUESTIONS_TOOL_NAME, 'pocAskQuestions');
+    assert.strictEqual(ASK_QUESTIONS_TOOL_NAME, 'froggyAskQuestions');
   });
 });

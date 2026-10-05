@@ -3,174 +3,174 @@ import * as vscode from 'vscode';
 
 suite('Extension Test Suite', () => {
   test('Extension should be present', () => {
-    assert.ok(vscode.extensions.getExtension('poc.poc-vscode-addin'));
+    assert.ok(vscode.extensions.getExtension('grozeille.froggy-agent'));
   });
 
   test('Should activate and register commands', async () => {
-    const ext = vscode.extensions.getExtension('poc.poc-vscode-addin');
+    const ext = vscode.extensions.getExtension('grozeille.froggy-agent');
     assert.ok(ext);
     await ext.activate();
     assert.strictEqual(ext.isActive, true);
     const commands = await vscode.commands.getCommands(true);
-    assert.ok(commands.includes('poc-vscode-addin.sayHello'));
-    assert.ok(commands.includes('poc-vscode-addin.askAi'));
-    assert.ok(commands.includes('poc-vscode-addin.newSession'));
-    assert.ok(commands.includes('poc-vscode-addin.clearSession'));
-    assert.ok(commands.includes('poc-vscode-addin.openSession'));
-    assert.ok(commands.includes('poc-vscode-addin.openMainChat'));
-    assert.ok(commands.includes('poc-vscode-addin.refreshExplorer'));
-    assert.ok(commands.includes('poc-vscode-addin.copyFile'));
-    assert.ok(commands.includes('poc-vscode-addin.pasteFile'));
-    assert.ok(commands.includes('poc-vscode-addin.renameFile'));
-    assert.ok(commands.includes('poc-vscode-addin.deleteFile'));
-    assert.ok(commands.includes('poc-vscode-addin.revealFile'));
-    assert.ok(commands.includes('poc-vscode-addin.copyPath'));
-    assert.ok(commands.includes('poc-vscode-addin.copyRelativePath'));
-    assert.ok(commands.includes('poc-vscode-addin.newFile'));
-    assert.ok(commands.includes('poc-vscode-addin.newFolder'));
-    assert.ok(commands.includes('poc-vscode-addin.openPreview'));
-    assert.ok(commands.includes('poc-vscode-addin.deleteSkill'));
-    assert.ok(commands.includes('poc-vscode-addin.restoreSkill'));
-    assert.ok(commands.includes('poc-vscode-addin.deleteSkillPermanently'));
-    assert.ok(commands.includes('poc-vscode-addin.deleteSession'));
-    assert.ok(commands.includes('poc-vscode-addin.restoreSession'));
-    assert.ok(commands.includes('poc-vscode-addin.deleteSessionPermanently'));
+    assert.ok(commands.includes('froggy-agent.sayHello'));
+    assert.ok(commands.includes('froggy-agent.askAi'));
+    assert.ok(commands.includes('froggy-agent.newSession'));
+    assert.ok(commands.includes('froggy-agent.clearSession'));
+    assert.ok(commands.includes('froggy-agent.openSession'));
+    assert.ok(commands.includes('froggy-agent.openMainChat'));
+    assert.ok(commands.includes('froggy-agent.refreshExplorer'));
+    assert.ok(commands.includes('froggy-agent.copyFile'));
+    assert.ok(commands.includes('froggy-agent.pasteFile'));
+    assert.ok(commands.includes('froggy-agent.renameFile'));
+    assert.ok(commands.includes('froggy-agent.deleteFile'));
+    assert.ok(commands.includes('froggy-agent.revealFile'));
+    assert.ok(commands.includes('froggy-agent.copyPath'));
+    assert.ok(commands.includes('froggy-agent.copyRelativePath'));
+    assert.ok(commands.includes('froggy-agent.newFile'));
+    assert.ok(commands.includes('froggy-agent.newFolder'));
+    assert.ok(commands.includes('froggy-agent.openPreview'));
+    assert.ok(commands.includes('froggy-agent.deleteSkill'));
+    assert.ok(commands.includes('froggy-agent.restoreSkill'));
+    assert.ok(commands.includes('froggy-agent.deleteSkillPermanently'));
+    assert.ok(commands.includes('froggy-agent.deleteSession'));
+    assert.ok(commands.includes('froggy-agent.restoreSession'));
+    assert.ok(commands.includes('froggy-agent.deleteSessionPermanently'));
   });
 
   test('Should default the model setting to auto', async () => {
-    const ext = vscode.extensions.getExtension('poc.poc-vscode-addin');
+    const ext = vscode.extensions.getExtension('grozeille.froggy-agent');
     assert.ok(ext);
     await ext.activate();
     assert.strictEqual(
-      vscode.workspace.getConfiguration('poc-vscode-addin').get('model'),
+      vscode.workspace.getConfiguration('froggy-agent').get('model'),
       'auto'
     );
   });
 
   test('Should register the Google search language model tool', async () => {
-    const ext = vscode.extensions.getExtension('poc.poc-vscode-addin');
+    const ext = vscode.extensions.getExtension('grozeille.froggy-agent');
     assert.ok(ext);
     await ext.activate();
     assert.ok(vscode.lm, 'Language model API should be available');
     assert.ok(
-      vscode.lm.tools.some((tool) => tool.name === 'pocGoogleSearch'),
-      'pocGoogleSearch tool should be registered'
+      vscode.lm.tools.some((tool) => tool.name === 'froggyGoogleSearch'),
+      'froggyGoogleSearch tool should be registered'
     );
   });
 
   test('Should register the web search language model tool', async () => {
-    const ext = vscode.extensions.getExtension('poc.poc-vscode-addin');
+    const ext = vscode.extensions.getExtension('grozeille.froggy-agent');
     assert.ok(ext);
     await ext.activate();
     assert.ok(vscode.lm, 'Language model API should be available');
     assert.ok(
-      vscode.lm.tools.some((tool) => tool.name === 'pocWebSearch'),
-      'pocWebSearch tool should be registered'
+      vscode.lm.tools.some((tool) => tool.name === 'froggyWebSearch'),
+      'froggyWebSearch tool should be registered'
     );
   });
 
   test('Should register the fetch-page language model tool', async () => {
-    const ext = vscode.extensions.getExtension('poc.poc-vscode-addin');
+    const ext = vscode.extensions.getExtension('grozeille.froggy-agent');
     assert.ok(ext);
     await ext.activate();
     assert.ok(vscode.lm, 'Language model API should be available');
     assert.ok(
-      vscode.lm.tools.some((tool) => tool.name === 'pocFetchWebPage'),
-      'pocFetchWebPage tool should be registered'
+      vscode.lm.tools.some((tool) => tool.name === 'froggyFetchWebPage'),
+      'froggyFetchWebPage tool should be registered'
     );
   });
 
   test('Should register the data file language model tools', async () => {
-    const ext = vscode.extensions.getExtension('poc.poc-vscode-addin');
+    const ext = vscode.extensions.getExtension('grozeille.froggy-agent');
     assert.ok(ext);
     await ext.activate();
     assert.ok(vscode.lm, 'Language model API should be available');
     assert.ok(
-      vscode.lm.tools.some((tool) => tool.name === 'pocReadDataFile'),
-      'pocReadDataFile tool should be registered'
+      vscode.lm.tools.some((tool) => tool.name === 'froggyReadDataFile'),
+      'froggyReadDataFile tool should be registered'
     );
     assert.ok(
-      vscode.lm.tools.some((tool) => tool.name === 'pocListDataFiles'),
-      'pocListDataFiles tool should be registered'
+      vscode.lm.tools.some((tool) => tool.name === 'froggyListDataFiles'),
+      'froggyListDataFiles tool should be registered'
     );
   });
 
   test('Should register the run-skill language model tool', async () => {
-    const ext = vscode.extensions.getExtension('poc.poc-vscode-addin');
+    const ext = vscode.extensions.getExtension('grozeille.froggy-agent');
     assert.ok(ext);
     await ext.activate();
     assert.ok(vscode.lm, 'Language model API should be available');
     assert.ok(
-      vscode.lm.tools.some((tool) => tool.name === 'pocRunSkill'),
-      'pocRunSkill tool should be registered'
+      vscode.lm.tools.some((tool) => tool.name === 'froggyRunSkill'),
+      'froggyRunSkill tool should be registered'
     );
   });
 
   test('Should register the create-skill language model tool', async () => {
-    const ext = vscode.extensions.getExtension('poc.poc-vscode-addin');
+    const ext = vscode.extensions.getExtension('grozeille.froggy-agent');
     assert.ok(ext);
     await ext.activate();
     assert.ok(vscode.lm, 'Language model API should be available');
     assert.ok(
-      vscode.lm.tools.some((tool) => tool.name === 'pocCreateSkill'),
-      'pocCreateSkill tool should be registered'
+      vscode.lm.tools.some((tool) => tool.name === 'froggyCreateSkill'),
+      'froggyCreateSkill tool should be registered'
     );
   });
 
   test('Should register the ask-questions language model tool', async () => {
-    const ext = vscode.extensions.getExtension('poc.poc-vscode-addin');
+    const ext = vscode.extensions.getExtension('grozeille.froggy-agent');
     assert.ok(ext);
     await ext.activate();
     assert.ok(vscode.lm, 'Language model API should be available');
     assert.ok(
-      vscode.lm.tools.some((tool) => tool.name === 'pocAskQuestions'),
-      'pocAskQuestions tool should be registered'
+      vscode.lm.tools.some((tool) => tool.name === 'froggyAskQuestions'),
+      'froggyAskQuestions tool should be registered'
     );
   });
 
   test('Should register the terminal language model tool', async () => {
-    const ext = vscode.extensions.getExtension('poc.poc-vscode-addin');
+    const ext = vscode.extensions.getExtension('grozeille.froggy-agent');
     assert.ok(ext);
     await ext.activate();
     assert.ok(vscode.lm, 'Language model API should be available');
     assert.ok(
-      vscode.lm.tools.some((tool) => tool.name === 'pocRunTerminal'),
-      'pocRunTerminal tool should be registered'
+      vscode.lm.tools.some((tool) => tool.name === 'froggyRunTerminal'),
+      'froggyRunTerminal tool should be registered'
     );
   });
 
   test('Should register the open-page language model tool', async () => {
-    const ext = vscode.extensions.getExtension('poc.poc-vscode-addin');
+    const ext = vscode.extensions.getExtension('grozeille.froggy-agent');
     assert.ok(ext);
     await ext.activate();
     assert.ok(vscode.lm, 'Language model API should be available');
     assert.ok(
-      vscode.lm.tools.some((tool) => tool.name === 'pocOpenBrowserPage'),
-      'pocOpenBrowserPage tool should be registered'
+      vscode.lm.tools.some((tool) => tool.name === 'froggyOpenBrowserPage'),
+      'froggyOpenBrowserPage tool should be registered'
     );
   });
 
   test('Should register the memory language model tools', async () => {
-    const ext = vscode.extensions.getExtension('poc.poc-vscode-addin');
+    const ext = vscode.extensions.getExtension('grozeille.froggy-agent');
     assert.ok(ext);
     await ext.activate();
     assert.ok(vscode.lm, 'Language model API should be available');
     assert.ok(
-      vscode.lm.tools.some((tool) => tool.name === 'pocReadMemory'),
-      'pocReadMemory tool should be registered'
+      vscode.lm.tools.some((tool) => tool.name === 'froggyReadMemory'),
+      'froggyReadMemory tool should be registered'
     );
     assert.ok(
-      vscode.lm.tools.some((tool) => tool.name === 'pocAppendMemory'),
-      'pocAppendMemory tool should be registered'
+      vscode.lm.tools.some((tool) => tool.name === 'froggyAppendMemory'),
+      'froggyAppendMemory tool should be registered'
     );
   });
 
   test('Should invoke the date/time language model tool', async () => {
-    const ext = vscode.extensions.getExtension('poc.poc-vscode-addin');
+    const ext = vscode.extensions.getExtension('grozeille.froggy-agent');
     assert.ok(ext);
     await ext.activate();
     assert.ok(vscode.lm, 'Language model API should be available');
-    const result = await vscode.lm.invokeTool('pocDateTime', {
+    const result = await vscode.lm.invokeTool('froggyDateTime', {
       input: {},
       toolInvocationToken: undefined
     });

@@ -1,4 +1,4 @@
-export const GOOGLE_SEARCH_TOOL_NAME = 'pocGoogleSearch';
+export const GOOGLE_SEARCH_TOOL_NAME = 'froggyGoogleSearch';
 
 export interface GoogleSearchToolInput {
   query: string;

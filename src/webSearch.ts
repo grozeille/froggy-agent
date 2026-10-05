@@ -1,7 +1,7 @@
 import { snippetToText } from './htmlText';
 
 /** Tool name must match the `languageModelTools` contribution in package.json. */
-export const WEB_SEARCH_TOOL_NAME = 'pocWebSearch';
+export const WEB_SEARCH_TOOL_NAME = 'froggyWebSearch';
 
 export interface WebSearchToolInput {
   /** Keywords to look up on the internet, e.g. "current price of S&P 500". */
