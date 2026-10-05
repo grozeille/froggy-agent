@@ -160,3 +160,16 @@ export function clearedSession(session: ChatSession, now: number): ChatSession {
     updatedAt: now
   };
 }
+
+/** Input-box validation for a renamed session title. */
+export function validateSessionTitle(name: string): string | undefined {
+  if (!name.trim()) {
+    return 'Title cannot be empty.';
+  }
+  return undefined;
+}
+
+/** Retitle a session, keeping messages, flags and timestamps (no list bump). */
+export function renamedSession(session: ChatSession, title: string): ChatSession {
+  return { ...session, title: title.trim() };
+}

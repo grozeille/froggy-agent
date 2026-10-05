@@ -2,7 +2,7 @@ body {
   margin: 0;
   padding: 0;
   color: var(--vscode-foreground);
-  background-color: var(--vscode-editor-background);
+  background-color: var(--vscode-sideBar-background);
   font-family: var(--vscode-font-family);
   font-size: var(--vscode-font-size);
 }
@@ -46,11 +46,9 @@ h1 {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  border: 1px solid var(--vscode-panel-border);
   background: var(--vscode-sideBar-background);
   padding: 12px;
   margin-bottom: 8px;
-  border-radius: 8px;
 }
 
 .conversation::-webkit-scrollbar {

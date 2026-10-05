@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { isMainSession } from './sessions';
+import { isMainSession, validateSessionTitle } from './sessions';
 import type { SessionStore } from './sessionStore';
 import type { SessionTreeItem } from './sessionsProvider';
 
@@ -18,17 +18,52 @@ function failureMessage(err: unknown): string {
 }
 
 /**
- * Sessions view archive commands: Archive moves a session to the archive
- * (reversible, no confirmation), Restore moves it back, Delete
- * removes an archived session for good (modal confirmation). The main chat
- * is never listed, so it can never be archived.
+ * Sessions view commands: Rename prompts for a new title (live and archived
+ * sessions), Archive moves a session to the archive (reversible, no
+ * confirmation), Restore moves it back, Delete removes an archived session
+ * for good (modal confirmation). The main chat is never listed, so it can
+ * never be renamed or archived.
  */
 export function registerSessionArchiveCommands(
   store: SessionStore,
   refresh: () => void
 ): vscode.Disposable[] {
+  const rename = vscode.commands.registerCommand(
+    'froggy-agent.renameSession',
+    async (item?: unknown) => {
+      const ref = toSessionRef(item);
+      if (!ref) {
+        return;
+      }
+      const session = store.get(ref.id);
+      if (!session) {
+        void vscode.window.showErrorMessage(`Session was not found${ref.archived ? ' in the Archive' : ''}.`);
+        refresh();
+        return;
+      }
+      if (isMainSession(session)) {
+        return;
+      }
+      const next = await vscode.window.showInputBox({
+        prompt: 'Rename',
+        value: session.title,
+        validateInput: validateSessionTitle
+      });
+      if (!next || next.trim() === session.title) {
+        return;
+      }
+      try {
+        await store.rename(ref.id, next);
+      } catch (err) {
+        void vscode.window.showErrorMessage(`Rename failed: ${failureMessage(err)}`);
+        return;
+      }
+      refresh();
+    }
+  );
+
   const del = vscode.commands.registerCommand(
-    'poc-vscode-addin.deleteSession',
+    'froggy-agent.deleteSession',
     async (item?: unknown) => {
       const ref = toSessionRef(item);
       if (!ref || ref.archived) {
@@ -55,7 +90,7 @@ export function registerSessionArchiveCommands(
   );
 
   const restore = vscode.commands.registerCommand(
-    'poc-vscode-addin.restoreSession',
+    'froggy-agent.restoreSession',
     async (item?: unknown) => {
       const ref = toSessionRef(item);
       if (!ref || !ref.archived) {
@@ -79,7 +114,7 @@ export function registerSessionArchiveCommands(
   );
 
   const delForever = vscode.commands.registerCommand(
-    'poc-vscode-addin.deleteSessionPermanently',
+    'froggy-agent.deleteSessionPermanently',
     async (item?: unknown) => {
       const ref = toSessionRef(item);
       if (!ref || !ref.archived) {
@@ -109,5 +144,5 @@ export function registerSessionArchiveCommands(
     }
   );
 
-  return [del, restore, delForever];
+  return [rename, del, restore, delForever];
 }

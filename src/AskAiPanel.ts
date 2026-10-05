@@ -76,7 +76,7 @@ import {
 
 export class AskAiPanel {
   public static currentPanel: AskAiPanel | undefined;
-  public static readonly viewType = 'pocAskAi';
+  public static readonly viewType = 'froggyAskAi';
 
   private readonly _panel: vscode.WebviewPanel;
   private readonly _extensionUri: vscode.Uri;
@@ -220,7 +220,7 @@ export class AskAiPanel {
   private async _resolveModel(): Promise<vscode.LanguageModelChat> {
     const models = await vscode.lm.selectChatModels();
     const setting = vscode.workspace
-      .getConfiguration('poc-vscode-addin')
+      .getConfiguration('froggy-agent')
       .get<string>(MODEL_SETTING_KEY, MODEL_SETTING_DEFAULT);
     return pickChatModel(models, setting);
   }
@@ -344,7 +344,7 @@ export class AskAiPanel {
     let answer = '';
     const toolRuns: ChatToolRun[] = [];
     try {
-      // No agent / tool picker in the UI: model from the `poc-vscode-addin.model`
+      // No agent / tool picker in the UI: model from the `froggy-agent.model`
       // setting (`auto` by default), tools run automatically.
       if (!vscode.lm) {
         throw new Error('Language models are not available in this version of VS Code.');
@@ -373,7 +373,7 @@ export class AskAiPanel {
         CREATE_SKILL_TOOL_NAME,
         TERMINAL_TOOL_NAME
       ];
-      const config = vscode.workspace.getConfiguration('poc-vscode-addin');
+      const config = vscode.workspace.getConfiguration('froggy-agent');
       const extraNames = config.get<string[]>(TOOL_SETTING_KEY, [...TOOL_SETTING_DEFAULT]);
       const tools = dropSupersededTerminalTools(
         resolveAgentTools(vscode.lm.tools, builtinTools, extraNames ?? []),

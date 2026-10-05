@@ -12,7 +12,7 @@ function readModelSetting(): ModelSettingDef | undefined {
   const pkg = JSON.parse(fs.readFileSync(file, 'utf8')) as {
     contributes?: { configuration?: { properties?: Record<string, ModelSettingDef> } };
   };
-  return pkg.contributes?.configuration?.properties?.[`poc-vscode-addin.${MODEL_SETTING_KEY}`];
+  return pkg.contributes?.configuration?.properties?.[`froggy-agent.${MODEL_SETTING_KEY}`];
 }
 
 const MODELS = [

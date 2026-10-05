@@ -1,5 +1,5 @@
 /** Tool name must match the `languageModelTools` contribution in package.json. */
-export const TERMINAL_TOOL_NAME = 'pocRunTerminal';
+export const TERMINAL_TOOL_NAME = 'froggyRunTerminal';
 
 /** Kill terminal commands after this long; cap what comes back to the model. */
 export const TERMINAL_TIMEOUT_MS = 60_000;

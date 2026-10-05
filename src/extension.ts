@@ -46,32 +46,32 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.window.registerTreeDataProvider(AskAiActionsProvider.viewId, actionsProvider),
     vscode.window.registerTreeDataProvider(SessionsProvider.viewId, sessionsProvider),
     vscode.window.registerTreeDataProvider(SkillsProvider.viewId, skillsProvider),
-    vscode.commands.registerCommand('poc-vscode-addin.sayHello', () => {
-      vscode.window.showInformationMessage('Hello from poc-vscode-addin!');
+    vscode.commands.registerCommand('froggy-agent.sayHello', () => {
+      vscode.window.showInformationMessage('Hello from froggy-agent!');
     }),
-    vscode.commands.registerCommand('poc-vscode-addin.askAi', () => {
+    vscode.commands.registerCommand('froggy-agent.askAi', () => {
       return AskAiPanel.createOrShow(context.extensionUri, store);
     }),
-    vscode.commands.registerCommand('poc-vscode-addin.newSession', async () => {
+    vscode.commands.registerCommand('froggy-agent.newSession', async () => {
       const session = await store.create();
       await AskAiPanel.createOrShow(context.extensionUri, store, session.id);
     }),
-    vscode.commands.registerCommand('poc-vscode-addin.clearSession', async () => {
+    vscode.commands.registerCommand('froggy-agent.clearSession', async () => {
       await AskAiPanel.currentPanel?.clearSession();
     }),
-    vscode.commands.registerCommand('poc-vscode-addin.openSession', async (sessionId?: string) => {
+    vscode.commands.registerCommand('froggy-agent.openSession', async (sessionId?: string) => {
       await AskAiPanel.createOrShow(context.extensionUri, store, sessionId);
     }),
-    vscode.commands.registerCommand('poc-vscode-addin.openMainChat', async () => {
+    vscode.commands.registerCommand('froggy-agent.openMainChat', async () => {
       const session = await store.getOrCreateMain();
       await AskAiPanel.createOrShow(context.extensionUri, store, session.id);
     }),
-    vscode.commands.registerCommand('poc-vscode-addin.refreshExplorer', () => {
+    vscode.commands.registerCommand('froggy-agent.refreshExplorer', () => {
       sessionsProvider.refresh();
       filesProvider.refresh();
       skillsProvider.refresh();
     }),
-    vscode.commands.registerCommand('poc-vscode-addin.openPreview', async (uri?: vscode.Uri) => {
+    vscode.commands.registerCommand('froggy-agent.openPreview', async (uri?: vscode.Uri) => {
       try {
         await vscode.commands.executeCommand('markdown.showPreview', uri);
       } catch {

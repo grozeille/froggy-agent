@@ -32,8 +32,8 @@ suite('memory', () => {
   });
 
   test('constants are defined', () => {
-    assert.strictEqual(READ_MEMORY_TOOL_NAME, 'pocReadMemory');
-    assert.strictEqual(APPEND_MEMORY_TOOL_NAME, 'pocAppendMemory');
+    assert.strictEqual(READ_MEMORY_TOOL_NAME, 'froggyReadMemory');
+    assert.strictEqual(APPEND_MEMORY_TOOL_NAME, 'froggyAppendMemory');
     assert.strictEqual(MEMORY_PATH, MEMORY_FILE_NAME);
     assert.strictEqual(MEMORY_PATH, 'memory.md');
     assert.strictEqual(MAX_MEMORY_BYTES, 20_000);

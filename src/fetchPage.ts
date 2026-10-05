@@ -3,7 +3,7 @@ import { isSafeHttpUrl } from './urls';
 import type { WebFetchInit } from './webSearch';
 
 /** Tool name must match the `languageModelTools` contribution in package.json. */
-export const FETCH_PAGE_TOOL_NAME = 'pocFetchWebPage';
+export const FETCH_PAGE_TOOL_NAME = 'froggyFetchWebPage';
 
 export interface FetchPageToolInput {
   /** Full http(s) URL of the page to read. */

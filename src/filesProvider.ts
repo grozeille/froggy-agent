@@ -15,7 +15,7 @@ export class FilesTreeItem extends vscode.TreeItem {
 }
 
 export class FilesProvider implements vscode.TreeDataProvider<vscode.TreeItem> {
-  public static readonly viewId = 'pocFilesView';
+  public static readonly viewId = 'froggyFilesView';
 
   private readonly _onDidChangeTreeData = new vscode.EventEmitter<vscode.TreeItem | undefined>();
   public readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
@@ -69,7 +69,7 @@ export class FilesProvider implements vscode.TreeDataProvider<vscode.TreeItem> {
       const item = new FilesTreeItem(name, vscode.TreeItemCollapsibleState.None, false);
       item.resourceUri = uri;
       item.command = isMarkdownFile(name)
-        ? { command: 'poc-vscode-addin.openPreview', title: 'Open Preview', arguments: [uri] }
+        ? { command: 'froggy-agent.openPreview', title: 'Open Preview', arguments: [uri] }
         : { command: 'vscode.open', title: 'Open File', arguments: [uri] };
       item.contextValue = 'dataFile';
       item.tooltip = uri.fsPath;

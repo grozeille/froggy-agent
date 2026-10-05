@@ -1,5 +1,5 @@
 /** Tool name must match the `languageModelTools` contribution in package.json. */
-export const ASK_QUESTIONS_TOOL_NAME = 'pocAskQuestions';
+export const ASK_QUESTIONS_TOOL_NAME = 'froggyAskQuestions';
 
 /** Caps so one round stays a small card, not a form. */
 export const MAX_QUESTIONS = 4;

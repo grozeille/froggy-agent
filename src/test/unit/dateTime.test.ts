@@ -17,6 +17,6 @@ suite('dateTime', () => {
   });
 
   test('tool name matches the package.json contribution', () => {
-    assert.strictEqual(DATE_TIME_TOOL_NAME, 'pocDateTime');
+    assert.strictEqual(DATE_TIME_TOOL_NAME, 'froggyDateTime');
   });
 });

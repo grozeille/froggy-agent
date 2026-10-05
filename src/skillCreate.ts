@@ -1,5 +1,5 @@
 /** Tool name must match the `languageModelTools` contribution in package.json. */
-export const CREATE_SKILL_TOOL_NAME = 'pocCreateSkill';
+export const CREATE_SKILL_TOOL_NAME = 'froggyCreateSkill';
 
 /** The two files every built skill contains. */
 export const SKILL_MD_NAME = 'SKILL.md';

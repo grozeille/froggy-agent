@@ -22,7 +22,7 @@ function readSetting(key: string): ToolsSettingDef | undefined {
   const pkg = JSON.parse(fs.readFileSync(file, 'utf8')) as {
     contributes?: { configuration?: { properties?: Record<string, ToolsSettingDef> } };
   };
-  return pkg.contributes?.configuration?.properties?.[`poc-vscode-addin.${key}`];
+  return pkg.contributes?.configuration?.properties?.[`froggy-agent.${key}`];
 }
 
 function readToolsSetting(): ToolsSettingDef | undefined {
@@ -30,7 +30,7 @@ function readToolsSetting(): ToolsSettingDef | undefined {
 }
 
 const AVAILABLE = [
-  { name: 'pocDateTime' },
+  { name: 'froggyDateTime' },
   { name: 'open_browser_page' },
   { name: 'read_page' },
   { name: 'vscode_askQuestions' },
@@ -39,30 +39,30 @@ const AVAILABLE = [
 
 suite('toolSelection', () => {
   test('passes builtins first, then extras in setting order', () => {
-    const picked = resolveAgentTools(AVAILABLE, ['pocDateTime'], ['read_page', 'open_browser_page']);
+    const picked = resolveAgentTools(AVAILABLE, ['froggyDateTime'], ['read_page', 'open_browser_page']);
     assert.deepStrictEqual(
       picked.map((tool) => tool.name),
-      ['pocDateTime', 'read_page', 'open_browser_page']
+      ['froggyDateTime', 'read_page', 'open_browser_page']
     );
   });
 
   test('skips unknown tools and de-duplicates', () => {
     const picked = resolveAgentTools(
       AVAILABLE,
-      ['pocDateTime'],
-      ['nope', 'read_page', 'pocDateTime', 'read_page']
+      ['froggyDateTime'],
+      ['nope', 'read_page', 'froggyDateTime', 'read_page']
     );
     assert.deepStrictEqual(
       picked.map((tool) => tool.name),
-      ['pocDateTime', 'read_page']
+      ['froggyDateTime', 'read_page']
     );
   });
 
   test('empty extras keeps builtins only', () => {
-    const picked = resolveAgentTools(AVAILABLE, ['pocDateTime'], []);
+    const picked = resolveAgentTools(AVAILABLE, ['froggyDateTime'], []);
     assert.deepStrictEqual(
       picked.map((tool) => tool.name),
-      ['pocDateTime']
+      ['froggyDateTime']
     );
   });
 
@@ -72,10 +72,10 @@ suite('toolSelection', () => {
   });
 
   test('needsConfirmation matches listed tools exactly', () => {
-    const list = ['pocRunTerminal', 'run_in_terminal', 'pocRunSkill'];
-    assert.strictEqual(needsConfirmation('pocRunTerminal', list), true);
+    const list = ['froggyRunTerminal', 'run_in_terminal', 'froggyRunSkill'];
+    assert.strictEqual(needsConfirmation('froggyRunTerminal', list), true);
     assert.strictEqual(needsConfirmation('run_in_terminal', list), true);
-    assert.strictEqual(needsConfirmation('pocRunSkill', list), true);
+    assert.strictEqual(needsConfirmation('froggyRunSkill', list), true);
     assert.strictEqual(needsConfirmation('read_page', list), false);
     assert.strictEqual(needsConfirmation('Run_In_Terminal', list), false);
     assert.strictEqual(needsConfirmation('run_in_terminal', []), false);
@@ -83,7 +83,7 @@ suite('toolSelection', () => {
 
   test('describeToolCall shows the command plus its explanation', () => {
     assert.deepStrictEqual(
-      describeToolCall('pocRunTerminal', { command: 'dir', explanation: 'List files' }, 300),
+      describeToolCall('froggyRunTerminal', { command: 'dir', explanation: 'List files' }, 300),
       { title: 'Run this command?', detail: 'dir\nList files' }
     );
     assert.deepStrictEqual(
@@ -94,19 +94,19 @@ suite('toolSelection', () => {
 
   test('describeToolCall shows the skill and its arguments', () => {
     assert.deepStrictEqual(
-      describeToolCall('pocRunSkill', { skill: 'count-words', args: ['data/a.md'] }, 300),
+      describeToolCall('froggyRunSkill', { skill: 'count-words', args: ['data/a.md'] }, 300),
       { title: 'Run the "count-words" skill?', detail: 'Skill: count-words\nArguments: data/a.md' }
     );
-    const list = describeToolCall('pocRunSkill', { skill: '' }, 300);
+    const list = describeToolCall('froggyRunSkill', { skill: '' }, 300);
     assert.strictEqual(list.title, 'List the runnable skills?');
   });
 
   test('describeToolCall shows the new skill and its task', () => {
     assert.deepStrictEqual(
-      describeToolCall('pocCreateSkill', { skill: 'summarize', task: 'Summarize a file' }, 300),
+      describeToolCall('froggyCreateSkill', { skill: 'summarize', task: 'Summarize a file' }, 300),
       { title: 'Create the "summarize" skill?', detail: 'Skill: summarize\nTask: Summarize a file' }
     );
-    const unnamed = describeToolCall('pocCreateSkill', { task: 'Summarize a file' }, 300);
+    const unnamed = describeToolCall('froggyCreateSkill', { task: 'Summarize a file' }, 300);
     assert.strictEqual(unnamed.title, 'Create a new skill?');
     assert.strictEqual(unnamed.detail, 'Task: Summarize a file');
   });
@@ -116,35 +116,35 @@ suite('toolSelection', () => {
       describeToolCall('mysteryTool', { a: 1 }, 300),
       { title: 'Run "mysteryTool"?', detail: '{"a":1}' }
     );
-    const noCommand = describeToolCall('pocRunTerminal', { command: '' }, 300);
-    assert.strictEqual(noCommand.title, 'Run "pocRunTerminal"?');
+    const noCommand = describeToolCall('froggyRunTerminal', { command: '' }, 300);
+    assert.strictEqual(noCommand.title, 'Run "froggyRunTerminal"?');
   });
 
   test('describeToolCall truncates long details with a marker', () => {
-    const description = describeToolCall('pocRunTerminal', { command: 'x'.repeat(500) }, 50);
+    const description = describeToolCall('froggyRunTerminal', { command: 'x'.repeat(500) }, 50);
     assert.ok(description.detail.includes('…(truncated)'));
     assert.ok(description.detail.length <= 50 + '…(truncated)'.length + 1);
   });
 
   test('dropSupersededTerminalTools drops externals when the builtin is resolved', () => {
     const picked = dropSupersededTerminalTools(
-      [{ name: 'pocRunTerminal' }, { name: 'run_in_terminal' }, { name: 'pocDateTime' }],
-      'pocRunTerminal'
+      [{ name: 'froggyRunTerminal' }, { name: 'run_in_terminal' }, { name: 'froggyDateTime' }],
+      'froggyRunTerminal'
     );
     assert.deepStrictEqual(
       picked.map((tool) => tool.name),
-      ['pocRunTerminal', 'pocDateTime']
+      ['froggyRunTerminal', 'froggyDateTime']
     );
   });
 
   test('dropSupersededTerminalTools keeps everything without the builtin', () => {
     const picked = dropSupersededTerminalTools(
-      [{ name: 'run_in_terminal' }, { name: 'pocDateTime' }],
-      'pocRunTerminal'
+      [{ name: 'run_in_terminal' }, { name: 'froggyDateTime' }],
+      'froggyRunTerminal'
     );
     assert.deepStrictEqual(
       picked.map((tool) => tool.name),
-      ['run_in_terminal', 'pocDateTime']
+      ['run_in_terminal', 'froggyDateTime']
     );
   });
 
@@ -175,11 +175,11 @@ suite('toolSelection', () => {
     assert.strictEqual(CONFIRM_SETTING_KEY, 'confirmTools');
     assert.deepStrictEqual(readSetting(CONFIRM_SETTING_KEY)?.default, [...CONFIRM_SETTING_DEFAULT]);
     assert.deepStrictEqual([...CONFIRM_SETTING_DEFAULT], [
-      'pocRunTerminal',
+      'froggyRunTerminal',
       'run_in_terminal',
       'send_to_terminal',
-      'pocRunSkill',
-      'pocCreateSkill'
+      'froggyRunSkill',
+      'froggyCreateSkill'
     ]);
   });
 });

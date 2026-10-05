@@ -1,8 +1,8 @@
 import { MEMORY_FILE_NAME } from './sections';
 
 /** Tool names must match the `languageModelTools` contributions in package.json. */
-export const READ_MEMORY_TOOL_NAME = 'pocReadMemory';
-export const APPEND_MEMORY_TOOL_NAME = 'pocAppendMemory';
+export const READ_MEMORY_TOOL_NAME = 'froggyReadMemory';
+export const APPEND_MEMORY_TOOL_NAME = 'froggyAppendMemory';
 
 /** Memory file at the workspace root, shared with the sidebar Memory item. */
 export const MEMORY_PATH = MEMORY_FILE_NAME;
