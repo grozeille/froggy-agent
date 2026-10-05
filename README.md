@@ -1,6 +1,6 @@
-# poc-vscode-addin
+# froggy-agent
 
-Proof of concept: a VS Code extension (TypeScript) that contributes a sidebar
+Froggy Agent is a VS Code extension (TypeScript) that contributes a sidebar
 tree view and a central Ask AI panel with two-way message passing.
 
 ## What it demonstrates
@@ -20,7 +20,7 @@ tree view and a central Ask AI panel with two-way message passing.
   model), where it can be restored or deleted permanently. The Files
   context menu contains only these actions.
 - Central `Ask AI` panel: simplified Copilot-style UI with no agent/tool
-  pickers (model from the `poc-vscode-addin.model` setting, `auto` by
+  pickers (model from the `froggy-agent.model` setting, `auto` by
   default — any provider works, including Ollama), showing
   `Thinking...` while the model responds. The effective model
   is shown in the panel badge. Sessions persist in
@@ -35,7 +35,7 @@ tree view and a central Ask AI panel with two-way message passing.
   (`.github/skills/<name>/run.py`), the skill factory (new skills built by a
   Python-dev sub-agent), and the terminal runner (shell commands
   from the workspace root, confirmed in-chat); extra tool names from the
-  `poc-vscode-addin.tools` setting (empty by default: builtins only, so every
+  `froggy-agent.tools` setting (empty by default: builtins only, so every
   confirmation happens in-chat and no native popup ever shows). After a
   question that ran tools, a "See action
   logs..." link opens the session's runs (tool, input, decision, commands, output) in
@@ -49,11 +49,11 @@ tree view and a central Ask AI panel with two-way message passing.
 - Two-way messaging: webview `postMessage` -> extension `onDidReceiveMessage`,
   and extension `postMessage` -> webview `message` listener.
 - Theming through `var(--vscode-*)` CSS variables (no hardcoded palette).
-- Commands: `POC: Say Hello` shows a message, `POC: Ask AI` opens the last
-  session, `POC: New Discussion` starts one, `POC: Clear Discussion` empties
+- Commands: `Froggy Agent: Say Hello` shows a message, `Froggy Agent: Ask AI` opens the last
+  session, `Froggy Agent: New Discussion` starts one, `Froggy Agent: Clear Discussion` empties
   the open discussion (transcript and tool history; Stop first if an answer
-  is running), `POC: Open Main Chat` opens the
-  special main chat session (never listed in `Sessions`), `POC: Refresh Explorer`
+  is running), `Froggy Agent: Open Main Chat` opens the
+  special main chat session (never listed in `Sessions`), `Froggy Agent: Refresh Explorer`
   refreshes the views.
 
 ## Run it
@@ -77,23 +77,23 @@ the activity bar.
 
 ## Settings
 
-- `poc-vscode-addin.model` — chat model for Ask AI (`auto` by default: the
+- `froggy-agent.model` — chat model for Ask AI (`auto` by default: the
   first available model). Set it to a model id, name, family or
   `vendor/family` to pin a model, e.g. an Ollama model from the model picker.
   The effective model is shown in the panel badge; an unknown value fails
   with the list of available models. Agent behavior (tool calls) is offered
   to every model, but only models with function-calling support will use it
   (e.g. `qwen3:8b` under Ollama).
-- `poc-vscode-addin.tools` — extra tool names offered to the model, on top of
+- `froggy-agent.tools` — extra tool names offered to the model, on top of
   the builtins (default: `[]`, builtins only). Unknown names are silently
   ignored. External action tools (e.g. Copilot's browser or terminal tools)
   may show VS Code's own popup in addition to the in-chat card, so only add
   names you need. The model gets no other access to the machine than the
   tools it is offered.
-- `poc-vscode-addin.confirmTools` — tool names asking for an in-chat
+- `froggy-agent.confirmTools` — tool names asking for an in-chat
   Continue/Cancel confirmation card before running (default:
-  `pocRunTerminal`, `run_in_terminal`, `send_to_terminal`, `pocRunSkill`,
-  `pocCreateSkill`).
+  `froggyRunTerminal`, `run_in_terminal`, `send_to_terminal`, `froggyRunSkill`,
+  `froggyCreateSkill`).
   Reads outside `<workspace>/data` are only possible through these tools;
   `[]` disables confirmation. Leaving the session while a confirmation is
   pending denies it. The card shows a plain question plus what will run
@@ -172,7 +172,7 @@ Extension -> webview (each message carries its `sessionId`):
 - `src/extension.ts` — activation, provider + command registration
 - `src/askAiActionsProvider.ts`, `src/sessionsProvider.ts`,
   `src/filesProvider.ts`, `src/skillsProvider.ts` — one `TreeDataProvider`
-  per sidebar view (markdown files open in Preview via `poc-vscode-addin.openPreview`)
+  per sidebar view (markdown files open in Preview via `froggy-agent.openPreview`)
 - `src/fileCommands.ts` — Files view actions: new file/folder, copy/paste/rename/delete/reveal/copy path
 - `src/filesProvider.ts` — recursive `data/` listing + drag & drop controller (`Files` view)
 - `src/treeItems.ts` — shared tree item helpers
@@ -189,30 +189,30 @@ Extension -> webview (each message carries its `sessionId`):
 - `src/agentEnv.ts` — unsaved per-request preamble: OS/shell match + default-to-terminal nudge (unit-tested)
 - `src/actionLog.ts` — per-session tool-run journal, opened as a text tab (unit-tested)
 - `src/sessionStore.ts` — session persistence in `globalState`
-- `src/searchTool.ts` + `src/searchUrl.ts` — `pocGoogleSearch` language model tool
+- `src/searchTool.ts` + `src/searchUrl.ts` — `froggyGoogleSearch` language model tool
   (`#googleSearch`), opens a Google search in the Simple Browser (unit-tested)
-- `src/openPageTool.ts` + `src/openPage.ts` — `pocOpenBrowserPage` language model
+- `src/openPageTool.ts` + `src/openPage.ts` — `froggyOpenBrowserPage` language model
   tool (`#openPage`), opens any http(s) page in the Simple Browser (unit-tested)
-- `src/webSearchTool.ts` + `src/webSearch.ts` — `pocWebSearch` language model
+- `src/webSearchTool.ts` + `src/webSearch.ts` — `froggyWebSearch` language model
   tool (`#webSearch`), searches the internet (instant answers, market quotes,
   Wikipedia) and returns readable results to summarize (unit-tested)
-- `src/fetchPageTool.ts` + `src/fetchPage.ts` — `pocFetchWebPage` language model
+- `src/fetchPageTool.ts` + `src/fetchPage.ts` — `froggyFetchWebPage` language model
   tool (`#fetchWebPage`), fetches a public page as text for the model to read
   (local URLs refused); `src/htmlText.ts` holds the shared HTML-to-text
   helpers (unit-tested)
-- `src/memoryTool.ts` + `src/memory.ts` — `pocReadMemory` (`#readMemory`)
-  and `pocAppendMemory` (`#appendMemory`) language model tools, read and
+- `src/memoryTool.ts` + `src/memory.ts` — `froggyReadMemory` (`#readMemory`)
+  and `froggyAppendMemory` (`#appendMemory`) language model tools, read and
   append one-line facts in `<workspace>/memory.md` (unit-tested)
-- `src/dateTimeTool.ts` + `src/dateTime.ts` — `pocDateTime` language model tool
+- `src/dateTimeTool.ts` + `src/dateTime.ts` — `froggyDateTime` language model tool
   (`#dateTime`), returns the current date and time (unit-tested)
-- `src/dataFilesTool.ts` + `src/dataFiles.ts` — `pocReadDataFile`
-  (`#readDataFile`) and `pocListDataFiles` (`#listDataFiles`) language model
+- `src/dataFilesTool.ts` + `src/dataFiles.ts` — `froggyReadDataFile`
+  (`#readDataFile`) and `froggyListDataFiles` (`#listDataFiles`) language model
   tools, scoped to `<workspace>/data` with relative paths (unit-tested)
-- `src/skillRunTool.ts` + `src/skillRun.ts` — `pocRunSkill` language model
+- `src/skillRunTool.ts` + `src/skillRun.ts` — `froggyRunSkill` language model
   tool (`#runSkill`), runs `.github/skills/<name>/run.py` with the project
   `.venv` or PATH `python`, plus the per-request runnable-skill catalog hint
   (unit-tested)
-- `src/skillCreateTool.ts` + `src/skillCreate.ts` — `pocCreateSkill` language
+- `src/skillCreateTool.ts` + `src/skillCreate.ts` — `froggyCreateSkill` language
   model tool (`#createSkill`), skill factory: a Python-dev sub-agent builds
   `.github/skills/<name>/SKILL.md` + `run.py`, syntax-checked before saving
   (unit-tested)
@@ -220,10 +220,10 @@ Extension -> webview (each message carries its `sessionId`):
   `.gitignore` update and requirements fingerprint (unit-tested)
 - `src/pythonEnvSetup.ts` — shared Python ensure (probe, `.venv`,
   `.gitignore`) for the skill factory and runner
-- `src/askQuestionsTool.ts` + `src/askQuestions.ts` — `pocAskQuestions`
+- `src/askQuestionsTool.ts` + `src/askQuestions.ts` — `froggyAskQuestions`
   language model tool (`#askQuestions`), structured user questions with an
   in-chat answer card (unit-tested)
-- `src/terminalTool.ts` + `src/terminal.ts` — `pocRunTerminal` language model
+- `src/terminalTool.ts` + `src/terminal.ts` — `froggyRunTerminal` language model
   tool (`#runTerminal`), runs a shell command from the workspace root with a
   60s timeout (unit-tested)
 - `demo-project/` — sample workspace opened by the debug host: `memory.md`,
@@ -235,5 +235,3 @@ Extension -> webview (each message carries its `sessionId`):
 - `media/markdown.js` — dependency-free Markdown renderer (unit-tested)
 - `src/urls.ts` — safe external-link gate (unit-tested)
 - `src/test/unit/` — mocha unit tests, `src/test/suite/` — host integration tests
-
-Before publishing, change `publisher` in `package.json` from the `poc` placeholder.

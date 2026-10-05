@@ -18,7 +18,7 @@ interface PackageJson {
       activitybar?: ViewContainerDef[];
     };
     views?: {
-      pocSidebar?: ViewDef[];
+      froggySidebar?: ViewDef[];
     };
   };
 }
@@ -30,20 +30,20 @@ function readPackageJson(): PackageJson {
 
 suite('views', () => {
   test('sidebar contributes Ask AI, Sessions, Files and Skills views in order', () => {
-    const views = readPackageJson().contributes?.views?.pocSidebar ?? [];
+    const views = readPackageJson().contributes?.views?.froggySidebar ?? [];
     assert.deepStrictEqual(
       views.map((view) => view.name),
       ['Ask AI', 'Sessions', 'Files', 'Skills']
     );
     assert.deepStrictEqual(
       views.map((view) => view.id),
-      ['pocAskAiView', 'pocSessionsView', 'pocFilesView', 'pocSkillsView']
+      ['froggyAskAiView', 'froggySessionsView', 'froggyFilesView', 'froggySkillsView']
     );
   });
 
   test('activity bar container is titled Froggy Agent', () => {
     const containers = readPackageJson().contributes?.viewsContainers?.activitybar ?? [];
-    const sidebar = containers.find((container) => container.id === 'pocSidebar');
+    const sidebar = containers.find((container) => container.id === 'froggySidebar');
     assert.strictEqual(sidebar?.title, 'Froggy Agent');
   });
 });

@@ -24,6 +24,6 @@ suite('searchTool', () => {
   });
 
   test('tool name matches the package.json contribution', () => {
-    assert.strictEqual(GOOGLE_SEARCH_TOOL_NAME, 'pocGoogleSearch');
+    assert.strictEqual(GOOGLE_SEARCH_TOOL_NAME, 'froggyGoogleSearch');
   });
 });

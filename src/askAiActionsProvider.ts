@@ -3,7 +3,7 @@ import { MAIN_CHAT_LABEL, MEMORY_FILE_NAME } from './sections';
 import { infoTreeItem } from './treeItems';
 
 export class AskAiActionsProvider implements vscode.TreeDataProvider<vscode.TreeItem> {
-  public static readonly viewId = 'pocAskAiView';
+  public static readonly viewId = 'froggyAskAiView';
 
   public getTreeItem(element: vscode.TreeItem): vscode.TreeItem {
     return element;
@@ -12,7 +12,7 @@ export class AskAiActionsProvider implements vscode.TreeDataProvider<vscode.Tree
   public getChildren(): vscode.TreeItem[] {
     const main = new vscode.TreeItem(MAIN_CHAT_LABEL, vscode.TreeItemCollapsibleState.None);
     main.iconPath = new vscode.ThemeIcon('comment-discussion');
-    main.command = { command: 'poc-vscode-addin.openMainChat', title: 'Main Chat' };
+    main.command = { command: 'froggy-agent.openMainChat', title: 'Main Chat' };
     main.tooltip = 'Open the main chat';
     main.contextValue = 'mainChat';
 
@@ -27,7 +27,7 @@ export class AskAiActionsProvider implements vscode.TreeDataProvider<vscode.Tree
     memory.resourceUri = memoryUri;
     memory.iconPath = new vscode.ThemeIcon('note');
     memory.command = {
-      command: 'poc-vscode-addin.openPreview',
+      command: 'froggy-agent.openPreview',
       title: 'Open Memory',
       arguments: [memoryUri]
     };

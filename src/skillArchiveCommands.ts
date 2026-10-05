@@ -39,7 +39,7 @@ async function uniqueArchiveDest(dir: vscode.Uri, skillName: string): Promise<vs
  */
 export function registerSkillArchiveCommands(refresh: () => void): vscode.Disposable[] {
   const del = vscode.commands.registerCommand(
-    'poc-vscode-addin.deleteSkill',
+    'froggy-agent.deleteSkill',
     async (item?: unknown) => {
       const ref = toSkillRef(item);
       if (!ref || ref.archived) {
@@ -70,7 +70,7 @@ export function registerSkillArchiveCommands(refresh: () => void): vscode.Dispos
   );
 
   const restore = vscode.commands.registerCommand(
-    'poc-vscode-addin.restoreSkill',
+    'froggy-agent.restoreSkill',
     async (item?: unknown) => {
       const ref = toSkillRef(item);
       if (!ref || !ref.archived) {
@@ -107,7 +107,7 @@ export function registerSkillArchiveCommands(refresh: () => void): vscode.Dispos
   );
 
   const delForever = vscode.commands.registerCommand(
-    'poc-vscode-addin.deleteSkillPermanently',
+    'froggy-agent.deleteSkillPermanently',
     async (item?: unknown) => {
       const ref = toSkillRef(item);
       if (!ref || !ref.archived) {

@@ -22,7 +22,7 @@ suite('terminal', () => {
   });
 
   test('execution constants are defined', () => {
-    assert.strictEqual(TERMINAL_TOOL_NAME, 'pocRunTerminal');
+    assert.strictEqual(TERMINAL_TOOL_NAME, 'froggyRunTerminal');
     assert.strictEqual(TERMINAL_TIMEOUT_MS, 60_000);
     assert.strictEqual(MAX_TERMINAL_OUTPUT_CHARS, 20_000);
   });

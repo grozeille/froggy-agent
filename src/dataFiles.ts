@@ -1,6 +1,6 @@
 /** Tool names must match the `languageModelTools` contributions in package.json. */
-export const READ_DATA_FILE_TOOL_NAME = 'pocReadDataFile';
-export const LIST_DATA_FILES_TOOL_NAME = 'pocListDataFiles';
+export const READ_DATA_FILE_TOOL_NAME = 'froggyReadDataFile';
+export const LIST_DATA_FILES_TOOL_NAME = 'froggyListDataFiles';
 
 /** Refuse to send more than this many bytes of file content to the model. */
 export const MAX_DATA_FILE_BYTES = 100_000;

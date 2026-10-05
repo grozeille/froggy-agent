@@ -18,11 +18,11 @@ export function agentEnvironmentPreamble(platform = process.platform): string {
 }
 
 /**
- * Terminal execution tools, builtin first: the builtin `pocRunTerminal` is
+ * Terminal execution tools, builtin first: the builtin `froggyRunTerminal` is
  * confirmed in-chat only, while `run_in_terminal` would also show VS Code's
  * native popup — so the model is nudged to the builtin when both are offered.
  */
-const TERMINAL_TOOL_NAMES: readonly string[] = ['pocRunTerminal', 'run_in_terminal'];
+const TERMINAL_TOOL_NAMES: readonly string[] = ['froggyRunTerminal', 'run_in_terminal'];
 
 /**
  * Grounding nudge, appended to every request: past turns replay tool calls
@@ -53,10 +53,10 @@ export function terminalToolHint(offeredToolNames: readonly string[]): string {
 }
 
 /**
- * Web research tools: `pocWebSearch` returns readable results for the model
- * to summarize, `pocFetchWebPage` reads one result in full.
+ * Web research tools: `froggyWebSearch` returns readable results for the model
+ * to summarize, `froggyFetchWebPage` reads one result in full.
  */
-const WEB_SEARCH_TOOL_NAMES: readonly string[] = ['pocWebSearch', 'pocFetchWebPage'];
+const WEB_SEARCH_TOOL_NAMES: readonly string[] = ['froggyWebSearch', 'froggyFetchWebPage'];
 
 /**
  * Default-to-search nudge, appended to the preamble only when the web search
@@ -69,7 +69,7 @@ export function webSearchHint(offeredToolNames: readonly string[]): string {
     return '';
   }
   const fetchBit = offeredToolNames.includes(WEB_SEARCH_TOOL_NAMES[1])
-    ? ' If a result looks worth reading in full, read it with the "pocFetchWebPage" tool before answering.'
+    ? ' If a result looks worth reading in full, read it with the "froggyFetchWebPage" tool before answering.'
     : '';
   return (
     ` When the user asks to use the internet or search the web (e.g. "using internet",` +

@@ -65,16 +65,16 @@ suite('skillRun', () => {
   test('formatSkillsHint lists skills and claims precedence over the terminal', () => {
     const hint = formatSkillsHint(
       [{ name: 'count-words', title: 'Count Words', description: 'Count words of a file.' }],
-      'pocRunSkill'
+      'froggyRunSkill'
     );
     assert.ok(hint.includes('count-words'), 'names the skill');
     assert.ok(hint.includes('Count words of a file.'), 'includes the description');
-    assert.ok(hint.includes('"pocRunSkill"'), 'names the tool');
+    assert.ok(hint.includes('"froggyRunSkill"'), 'names the tool');
     assert.match(hint, /instead of using the terminal/);
   });
 
   test('formatSkillsHint stays silent without runnable skills', () => {
-    assert.strictEqual(formatSkillsHint([], 'pocRunSkill'), '');
+    assert.strictEqual(formatSkillsHint([], 'froggyRunSkill'), '');
   });
 
   test('prefers the project-local .venv interpreter', () => {
@@ -86,7 +86,7 @@ suite('skillRun', () => {
   });
 
   test('execution constants are defined', () => {
-    assert.strictEqual(RUN_SKILL_TOOL_NAME, 'pocRunSkill');
+    assert.strictEqual(RUN_SKILL_TOOL_NAME, 'froggyRunSkill');
     assert.strictEqual(SKILL_SCRIPT_NAME, 'run.py');
     assert.strictEqual(REQUIREMENTS_FILE_NAME, 'requirements.txt');
     assert.strictEqual(SKILL_TIMEOUT_MS, 60_000);

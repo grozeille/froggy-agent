@@ -25,7 +25,7 @@ export class SessionTreeItem extends vscode.TreeItem {
 }
 
 export class SessionsProvider implements vscode.TreeDataProvider<vscode.TreeItem> {
-  public static readonly viewId = 'pocSessionsView';
+  public static readonly viewId = 'froggySessionsView';
 
   private readonly _onDidChangeTreeData = new vscode.EventEmitter<vscode.TreeItem | undefined>();
   public readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
@@ -70,7 +70,7 @@ export class SessionsProvider implements vscode.TreeDataProvider<vscode.TreeItem
     const item = new SessionTreeItem(session.title || NEW_SESSION_TITLE, session.id, archived);
     item.iconPath = new vscode.ThemeIcon('comment-discussion');
     item.command = {
-      command: 'poc-vscode-addin.openSession',
+      command: 'froggy-agent.openSession',
       title: 'Open Session',
       arguments: [session.id]
     };

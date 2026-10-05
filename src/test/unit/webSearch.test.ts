@@ -257,7 +257,7 @@ suite('webSearch', () => {
   });
 
   test('tool name matches the package.json contribution', () => {
-    assert.strictEqual(WEB_SEARCH_TOOL_NAME, 'pocWebSearch');
+    assert.strictEqual(WEB_SEARCH_TOOL_NAME, 'froggyWebSearch');
   });
 });
 

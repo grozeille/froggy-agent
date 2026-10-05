@@ -2,7 +2,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { copyNameFor, validateFileName } from './files';
 
-export const FILES_CLIPBOARD_CONTEXT = 'pocFilesClipboardHasData';
+export const FILES_CLIPBOARD_CONTEXT = 'froggyFilesClipboardHasData';
 
 function toUri(value: unknown): vscode.Uri | undefined {
   if (value instanceof vscode.Uri) {
@@ -93,7 +93,7 @@ export function registerFileCommands(refresh: () => void): vscode.Disposable[] {
   };
 
   const newFile = vscode.commands.registerCommand(
-    'poc-vscode-addin.newFile',
+    'froggy-agent.newFile',
     async (item?: unknown) => {
       const dir = await targetDir(item);
       if (!dir) {
@@ -122,7 +122,7 @@ export function registerFileCommands(refresh: () => void): vscode.Disposable[] {
   );
 
   const newFolder = vscode.commands.registerCommand(
-    'poc-vscode-addin.newFolder',
+    'froggy-agent.newFolder',
     async (item?: unknown) => {
       const dir = await targetDir(item);
       if (!dir) {
@@ -149,7 +149,7 @@ export function registerFileCommands(refresh: () => void): vscode.Disposable[] {
   );
 
   const copy = vscode.commands.registerCommand(
-    'poc-vscode-addin.copyFile',
+    'froggy-agent.copyFile',
     (item?: unknown, selected?: unknown) => {
       const uris = selectedUris(item, selected);
       if (uris.length > 0) {
@@ -159,7 +159,7 @@ export function registerFileCommands(refresh: () => void): vscode.Disposable[] {
   );
 
   const paste = vscode.commands.registerCommand(
-    'poc-vscode-addin.pasteFile',
+    'froggy-agent.pasteFile',
     async (item?: unknown) => {
       const dir = await targetDir(item);
       if (!dir || clipboard.length === 0) {
@@ -178,7 +178,7 @@ export function registerFileCommands(refresh: () => void): vscode.Disposable[] {
   );
 
   const rename = vscode.commands.registerCommand(
-    'poc-vscode-addin.renameFile',
+    'froggy-agent.renameFile',
     async (item?: unknown) => {
       const uri = toUri(item);
       if (!uri) {
@@ -210,7 +210,7 @@ export function registerFileCommands(refresh: () => void): vscode.Disposable[] {
   );
 
   const del = vscode.commands.registerCommand(
-    'poc-vscode-addin.deleteFile',
+    'froggy-agent.deleteFile',
     async (item?: unknown, selected?: unknown) => {
       const uris = selectedUris(item, selected);
       if (uris.length === 0) {
@@ -235,7 +235,7 @@ export function registerFileCommands(refresh: () => void): vscode.Disposable[] {
   );
 
   const reveal = vscode.commands.registerCommand(
-    'poc-vscode-addin.revealFile',
+    'froggy-agent.revealFile',
     async (item?: unknown) => {
       const uri = toUri(item);
       if (uri) {
@@ -245,7 +245,7 @@ export function registerFileCommands(refresh: () => void): vscode.Disposable[] {
   );
 
   const copyPath = vscode.commands.registerCommand(
-    'poc-vscode-addin.copyPath',
+    'froggy-agent.copyPath',
     async (item?: unknown) => {
       const uri = toUri(item);
       if (uri) {
@@ -255,7 +255,7 @@ export function registerFileCommands(refresh: () => void): vscode.Disposable[] {
   );
 
   const copyRelativePath = vscode.commands.registerCommand(
-    'poc-vscode-addin.copyRelativePath',
+    'froggy-agent.copyRelativePath',
     async (item?: unknown) => {
       const uri = toUri(item);
       if (uri) {

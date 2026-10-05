@@ -1,7 +1,7 @@
 import { isSafeHttpUrl } from './urls';
 
 /** Tool name must match the `languageModelTools` contribution in package.json. */
-export const OPEN_PAGE_TOOL_NAME = 'pocOpenBrowserPage';
+export const OPEN_PAGE_TOOL_NAME = 'froggyOpenBrowserPage';
 
 export interface OpenPageToolInput {
   /** Full http(s) URL of the page to open. */
