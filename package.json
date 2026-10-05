@@ -22,7 +22,8 @@
     "onCommand:froggy-agent.clearSession",
     "onCommand:froggy-agent.openSession",
     "onCommand:froggy-agent.openMainChat",
-    "onCommand:froggy-agent.refreshExplorer"
+    "onCommand:froggy-agent.refreshExplorer",
+    "onCommand:froggy-agent.setupProject"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -90,6 +91,11 @@
         "title": "Froggy Agent: Refresh Explorer",
         "category": "Froggy Agent",
         "icon": "$(refresh)"
+      },
+      {
+        "command": "froggy-agent.setupProject",
+        "title": "Froggy Agent: Setup Project",
+        "category": "Froggy Agent"
       },
       {
         "command": "froggy-agent.copyFile",

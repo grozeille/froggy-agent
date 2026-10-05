@@ -18,7 +18,9 @@ tree view and a central Ask AI panel with two-way message passing.
   `# Title`. Right-click Delete moves a skill or a session to the view's
   `Archive` node (skills are kept outside `.github`, invisible to the
   model), where it can be restored or deleted permanently. The Files
-  context menu contains only these actions.
+  context menu contains only these actions. The built-in skills
+  (`browser-search`, `count-words`, `skill-factory`) show a `built-in` marker
+  with a package icon and cannot be archived or deleted.
 - Central `Ask AI` panel: simplified Copilot-style UI with no agent/tool
   pickers (model from the `froggy-agent.model` setting, `auto` by
   default — any provider works, including Ollama), showing
@@ -54,7 +56,8 @@ tree view and a central Ask AI panel with two-way message passing.
   the open discussion (transcript and tool history; Stop first if an answer
   is running), `Froggy Agent: Open Main Chat` opens the
   special main chat session (never listed in `Sessions`), `Froggy Agent: Refresh Explorer`
-  refreshes the views.
+  refreshes the views, `Froggy Agent: Setup Project` scaffolds a fresh
+  workspace (see Project setup).
 
 ## Run it
 
@@ -145,6 +148,18 @@ results with their sources; it reads a promising result in full via
 `#fetchWebPage` (public pages only, truncated to 8KB). Plain questions
 never trigger a search — only explicit internet requests do.
 
+Project setup: on a virgin folder (no `memory.md`, `data/` or
+`.github/skills/`) the extension offers to scaffold a project; `Froggy Agent:
+Setup Project` runs it any time. Setup creates `data/`, `memory.md` (bare
+`# Memory` header), the built-in skills (`browser-search`, `count-words`,
+`skill-factory`), `.vscode/settings.json` (`auto` model, builtins-only tools,
+Markdown preview), `.gitignore` entries and the workspace `.venv` — only
+missing pieces are created, existing files are never overwritten. Built-in
+skills are standard library only (no `requirements.txt` to install) and are
+marked `built-in` in the Skills view, where they cannot be archived or
+deleted. When no Python interpreter exists, setup alerts instead of creating
+the `.venv`.
+
 ## Message protocol
 
 Webview -> extension (`src/askAi.ts`):
@@ -212,6 +227,12 @@ Extension -> webview (each message carries its `sessionId`):
   tool (`#runSkill`), runs `.github/skills/<name>/run.py` with the project
   `.venv` or PATH `python`, plus the per-request runnable-skill catalog hint
   (unit-tested)
+- `src/defaultSkills.ts` — built-in skill templates embedded in the
+  extension (`browser-search`, `count-words`, `skill-factory`), written by
+  project setup (unit-tested)
+- `src/projectSetup.ts` + `src/projectSetupCommands.ts` — fresh-project
+  scaffold (structure, settings, `.venv`, virgin-folder prompt) and the
+  `Setup Project` command (unit-tested)
 - `src/skillCreateTool.ts` + `src/skillCreate.ts` — `froggyCreateSkill` language
   model tool (`#createSkill`), skill factory: a Python-dev sub-agent builds
   `.github/skills/<name>/SKILL.md` + `run.py`, syntax-checked before saving

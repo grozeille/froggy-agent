@@ -1,26 +1,31 @@
 import * as vscode from 'vscode';
 import { extractSkillTitle } from './skills';
+import { isBuiltinSkill } from './defaultSkills';
 import { SKILLS_DIR_NAME } from './skillRun';
 import { ARCHIVE_CONTEXT_VALUE, ARCHIVE_LABEL, archiveSummary } from './archive';
 import {
   ARCHIVE_DIR_NAME,
   ARCHIVED_SKILL_CONTEXT_VALUE,
+  BUILTIN_SKILL_CONTEXT_VALUE,
   SKILL_CONTEXT_VALUE
 } from './skillArchive';
 import { infoTreeItem } from './treeItems';
 
 /**
  * A skill node in the Skills view, live or archived. Archive commands read
- * `skillName`/`archived` to move the right folder.
+ * `skillName`/`archived` to move the right folder. `builtin` marks the
+ * shipped skills, which refuse to archive.
  */
 export class SkillTreeItem extends vscode.TreeItem {
   public readonly skillName: string;
   public readonly archived: boolean;
+  public readonly builtin: boolean;
 
-  public constructor(label: string, skillName: string, archived: boolean) {
+  public constructor(label: string, skillName: string, archived: boolean, builtin = false) {
     super(label, vscode.TreeItemCollapsibleState.None);
     this.skillName = skillName;
     this.archived = archived;
+    this.builtin = builtin;
   }
 }
 
@@ -106,11 +111,20 @@ export class SkillsProvider implements vscode.TreeDataProvider<vscode.TreeItem> 
       } catch {
         exists = false;
       }
-      const item = new SkillTreeItem(title, folder, archived);
+      const builtin = !archived && isBuiltinSkill(folder);
+      const item = new SkillTreeItem(title, folder, archived, builtin);
       item.resourceUri = skillMd;
-      item.iconPath = new vscode.ThemeIcon('book');
-      item.contextValue = archived ? ARCHIVED_SKILL_CONTEXT_VALUE : SKILL_CONTEXT_VALUE;
-      if (title !== folder) {
+      item.iconPath = new vscode.ThemeIcon(builtin ? 'package' : 'book');
+      if (archived) {
+        item.contextValue = ARCHIVED_SKILL_CONTEXT_VALUE;
+      } else if (builtin) {
+        item.contextValue = BUILTIN_SKILL_CONTEXT_VALUE;
+      } else {
+        item.contextValue = SKILL_CONTEXT_VALUE;
+      }
+      if (builtin) {
+        item.description = title !== folder ? `${folder} • built-in` : 'built-in';
+      } else if (title !== folder) {
         item.description = folder;
       }
       if (exists) {
@@ -119,7 +133,7 @@ export class SkillsProvider implements vscode.TreeDataProvider<vscode.TreeItem> 
           title: 'Open Skill Preview',
           arguments: [skillMd]
         };
-        item.tooltip = skillMd.fsPath;
+        item.tooltip = builtin ? `${skillMd.fsPath} (built-in)` : skillMd.fsPath;
       } else {
         item.description = 'missing SKILL.md';
         item.tooltip = `No SKILL.md in ${folder}`;

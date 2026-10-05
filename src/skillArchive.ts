@@ -14,6 +14,11 @@ export const ARCHIVE_DIR_NAME = '.froggy-agent/archive';
 /** Tree item context values driving the Skills view menus. */
 export const SKILL_CONTEXT_VALUE = 'skill';
 export const ARCHIVED_SKILL_CONTEXT_VALUE = 'archivedSkill';
+/**
+ * Built-in skills (shipped by project setup): no archive/delete menu targets
+ * this value, so they can neither be archived nor deleted from the view.
+ */
+export const BUILTIN_SKILL_CONTEXT_VALUE = 'builtinSkill';
 
 /**
  * Name for the n-th archived copy of a skill slug: `ram-report` ->

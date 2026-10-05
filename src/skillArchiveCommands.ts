@@ -3,14 +3,15 @@ import { SKILLS_DIR_NAME } from './skillRun';
 import { ARCHIVE_DIR_NAME, archiveCopyNameFor } from './skillArchive';
 import type { SkillTreeItem } from './skillsProvider';
 
-function toSkillRef(item: unknown): { name: string; archived: boolean } | undefined {
+function toSkillRef(item: unknown): { name: string; archived: boolean; builtin: boolean } | undefined {
   const candidate = item as SkillTreeItem | undefined;
   const name = candidate?.skillName;
   const archived = candidate?.archived;
+  const builtin = candidate?.builtin ?? false;
   if (typeof name !== 'string' || !name || typeof archived !== 'boolean') {
     return undefined;
   }
-  return { name, archived };
+  return { name, archived, builtin };
 }
 
 async function exists(uri: vscode.Uri): Promise<boolean> {
@@ -42,6 +43,12 @@ export function registerSkillArchiveCommands(refresh: () => void): vscode.Dispos
     'froggy-agent.deleteSkill',
     async (item?: unknown) => {
       const ref = toSkillRef(item);
+      if (ref?.builtin) {
+        void vscode.window.showInformationMessage(
+          `Skill "${ref.name}" is built-in and cannot be archived.`
+        );
+        return;
+      }
       if (!ref || ref.archived) {
         return;
       }
