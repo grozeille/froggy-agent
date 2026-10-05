@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { extractSkillTitle } from './skills';
-import { isBuiltinSkill } from './defaultSkills';
+import { compareLiveSkillNames, isBuiltinSkill } from './defaultSkills';
 import { SKILLS_DIR_NAME } from './skillRun';
 import { ARCHIVE_CONTEXT_VALUE, ARCHIVE_LABEL, archiveSummary } from './archive';
 import {
@@ -75,7 +75,7 @@ export class SkillsProvider implements vscode.TreeDataProvider<vscode.TreeItem> 
     } else if (folders.length === 0) {
       items = [infoTreeItem('No skills found.')];
     } else {
-      items = await this._skillItems(skillsDir, folders, false);
+      items = await this._skillItems(skillsDir, [...folders].sort(compareLiveSkillNames), false);
     }
     items.push(this._archiveItem((await readFolderNames(archiveDir))?.length ?? 0));
     return items;

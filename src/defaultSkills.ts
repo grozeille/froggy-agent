@@ -170,3 +170,13 @@ export const DEFAULT_SKILL_NAMES: readonly string[] = DEFAULT_SKILLS.map(
 export function isBuiltinSkill(skillName: string): boolean {
   return DEFAULT_SKILL_NAMES.includes(skillName);
 }
+
+/**
+ * Live-skills order for the Skills view: built-ins first (alphabetical),
+ * then workspace skills (alphabetical). Archived skills stay purely
+ * alphabetical: they never render as built-in.
+ */
+export function compareLiveSkillNames(a: string, b: string): number {
+  const builtinOrder = Number(isBuiltinSkill(b)) - Number(isBuiltinSkill(a));
+  return builtinOrder !== 0 ? builtinOrder : a.localeCompare(b);
+}

@@ -5,6 +5,7 @@ import { ARCHIVE_CONTEXT_VALUE } from '../../archive';
 import {
   DEFAULT_SKILL_NAMES,
   DEFAULT_SKILLS,
+  compareLiveSkillNames,
   isBuiltinSkill
 } from '../../defaultSkills';
 import { MODEL_SETTING_DEFAULT } from '../../modelSelection';
@@ -152,6 +153,14 @@ suite('defaultSkills', () => {
     for (const name of ['', 'my-skill', 'count-words-x', 'browser-search-2']) {
       assert.strictEqual(isBuiltinSkill(name), false, name);
     }
+  });
+
+  test('live skills sort built-ins first, alphabetical within each group', () => {
+    const names = ['my-skill', 'skill-factory', 'aaa-user', 'browser-search', 'count-words'];
+    assert.deepStrictEqual(
+      [...names].sort(compareLiveSkillNames),
+      ['browser-search', 'count-words', 'skill-factory', 'aaa-user', 'my-skill']
+    );
   });
 });
 
