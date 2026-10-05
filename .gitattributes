@@ -1,0 +1,3 @@
+# Skill templates are embedded template literals: they must stay LF-only on
+# every checkout so scaffolded files are identical on all platforms.
+src/defaultSkills.ts text eol=lf
