@@ -5,6 +5,7 @@ import { FilesDragDropController, FilesProvider } from './filesProvider';
 import { FILES_CLIPBOARD_CONTEXT, registerFileCommands } from './fileCommands';
 import { SkillsProvider } from './skillsProvider';
 import { registerSkillArchiveCommands } from './skillArchiveCommands';
+import { maybePromptProjectSetup, registerProjectSetupCommands } from './projectSetupCommands';
 import { ARCHIVE_DIR_NAME } from './skillArchive';
 import { registerSessionArchiveCommands } from './sessionArchiveCommands';
 import { AskAiPanel } from './AskAiPanel';
@@ -42,6 +43,10 @@ export function activate(context: vscode.ExtensionContext): void {
     filesView,
     ...registerFileCommands(() => filesProvider.refresh()),
     ...registerSkillArchiveCommands(() => skillsProvider.refresh()),
+    ...registerProjectSetupCommands(() => {
+      filesProvider.refresh();
+      skillsProvider.refresh();
+    }),
     ...registerSessionArchiveCommands(store, () => sessionsProvider.refresh()),
     vscode.window.registerTreeDataProvider(AskAiActionsProvider.viewId, actionsProvider),
     vscode.window.registerTreeDataProvider(SessionsProvider.viewId, sessionsProvider),
@@ -87,6 +92,12 @@ export function activate(context: vscode.ExtensionContext): void {
       context.subscriptions.push(tool);
     }
   }
+
+  // Offer project setup on a virgin folder (fire-and-forget: activation must not wait).
+  void maybePromptProjectSetup(context.workspaceState, () => {
+    filesProvider.refresh();
+    skillsProvider.refresh();
+  });
 
   // Keep the Files / Skills views fresh when files change.
   const watchers: Array<[string, () => void]> = [
