@@ -7,6 +7,7 @@ import {
   isArchived,
   isMainSession,
   liveSessions,
+  renamedSession,
   withArchived,
   type ChatSession
 } from './sessions';
@@ -80,6 +81,23 @@ export class SessionStore implements vscode.Disposable {
       return;
     }
     await this.save(withArchived(session, false));
+  }
+
+  /**
+   * Retitle a session; resolves undefined when the id is unknown.
+   * Blank titles are ignored, keeping the current title.
+   */
+  public async rename(id: string, title: string): Promise<ChatSession | undefined> {
+    const session = this.get(id);
+    if (!session) {
+      return undefined;
+    }
+    if (!title.trim()) {
+      return session;
+    }
+    const renamed = renamedSession(session, title);
+    await this.save(renamed);
+    return renamed;
   }
 
   public async save(session: ChatSession): Promise<void> {

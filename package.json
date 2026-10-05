@@ -167,6 +167,11 @@
         "command": "froggy-agent.deleteSessionPermanently",
         "title": "Delete",
         "category": "Froggy Agent"
+      },
+      {
+        "command": "froggy-agent.renameSession",
+        "title": "Rename",
+        "category": "Froggy Agent"
       }
     ],
     "menus": {
@@ -264,6 +269,11 @@
           "group": "2_modify"
         },
         {
+          "command": "froggy-agent.renameSession",
+          "when": "view == froggySessionsView && (viewItem == session || viewItem == archivedSession)",
+          "group": "2_modify"
+        },
+        {
           "command": "froggy-agent.deleteSession",
           "when": "view == froggySessionsView && viewItem == session",
           "group": "2_modify"
@@ -355,6 +365,10 @@
         },
         {
           "command": "froggy-agent.deleteSessionPermanently",
+          "when": "never"
+        },
+        {
+          "command": "froggy-agent.renameSession",
           "when": "never"
         }
       ]

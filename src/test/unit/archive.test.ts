@@ -50,15 +50,16 @@ suite('archive', () => {
     assert.strictEqual(archiveSummary(3, 'session', 'sessions'), '3 sessions');
   });
 
-  test('session archive/restore/delete commands are contributed', () => {
+  test('session archive/restore/delete/rename commands are contributed', () => {
     const commands = readPackageJson().contributes?.commands ?? [];
     const byId = new Map(commands.map((entry) => [entry.command, entry.title]));
     assert.strictEqual(byId.get('froggy-agent.deleteSession'), 'Archive');
     assert.strictEqual(byId.get('froggy-agent.restoreSession'), 'Restore');
     assert.strictEqual(byId.get('froggy-agent.deleteSessionPermanently'), 'Delete');
+    assert.strictEqual(byId.get('froggy-agent.renameSession'), 'Rename');
   });
 
-  test('sessions view context menus target live vs archived sessions', () => {
+  test('sessions view context menus target live vs archived sessions, plus rename', () => {
     const menus = readPackageJson().contributes?.menus?.['view/item/context'] ?? [];
     const byId = new Map(menus.map((entry) => [entry.command, entry.when]));
     assert.strictEqual(
@@ -73,6 +74,10 @@ suite('archive', () => {
       byId.get('froggy-agent.deleteSessionPermanently'),
       `view == froggySessionsView && viewItem == ${ARCHIVED_SESSION_CONTEXT_VALUE}`
     );
+    assert.strictEqual(
+      byId.get('froggy-agent.renameSession'),
+      `view == froggySessionsView && (viewItem == ${SESSION_CONTEXT_VALUE} || viewItem == ${ARCHIVED_SESSION_CONTEXT_VALUE})`
+    );
   });
 
   test('session archive commands are hidden from the command palette', () => {
@@ -81,7 +86,8 @@ suite('archive', () => {
     for (const id of [
       'froggy-agent.deleteSession',
       'froggy-agent.restoreSession',
-      'froggy-agent.deleteSessionPermanently'
+      'froggy-agent.deleteSessionPermanently',
+      'froggy-agent.renameSession'
     ]) {
       assert.strictEqual(byId.get(id), 'never', id);
     }

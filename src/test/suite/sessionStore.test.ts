@@ -148,3 +148,24 @@ suite('SessionStore archive', () => {
     }
   });
 });
+
+suite('SessionStore rename', () => {
+  test('rename retitles a session and ignores unknown ids and blank titles', async () => {
+    const store = new SessionStore(fakeMemento());
+    try {
+      const session = await store.create();
+      await store.save(withMessage(session, { role: 'user', text: 'hello' }, Date.now()));
+      const renamed = await store.rename(session.id, '  New title  ');
+      assert.ok(renamed);
+      assert.strictEqual(renamed.title, 'New title');
+      assert.strictEqual(renamed.messages.length, 1);
+      assert.strictEqual(store.get(session.id)?.title, 'New title');
+      assert.strictEqual(await store.rename('missing', 'x'), undefined);
+      const kept = await store.rename(session.id, '   ');
+      assert.strictEqual(kept?.title, 'New title');
+      assert.strictEqual(store.get(session.id)?.title, 'New title');
+    } finally {
+      store.dispose();
+    }
+  });
+});
