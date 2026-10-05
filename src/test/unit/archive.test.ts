@@ -50,12 +50,12 @@ suite('archive', () => {
     assert.strictEqual(archiveSummary(3, 'session', 'sessions'), '3 sessions');
   });
 
-  test('session delete/restore/delete-permanently commands are contributed', () => {
+  test('session archive/restore/delete commands are contributed', () => {
     const commands = readPackageJson().contributes?.commands ?? [];
     const byId = new Map(commands.map((entry) => [entry.command, entry.title]));
-    assert.strictEqual(byId.get('poc-vscode-addin.deleteSession'), 'Delete');
+    assert.strictEqual(byId.get('poc-vscode-addin.deleteSession'), 'Archive');
     assert.strictEqual(byId.get('poc-vscode-addin.restoreSession'), 'Restore');
-    assert.strictEqual(byId.get('poc-vscode-addin.deleteSessionPermanently'), 'Delete Permanently');
+    assert.strictEqual(byId.get('poc-vscode-addin.deleteSessionPermanently'), 'Delete');
   });
 
   test('sessions view context menus target live vs archived sessions', () => {

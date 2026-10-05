@@ -140,7 +140,7 @@
       },
       {
         "command": "poc-vscode-addin.deleteSkill",
-        "title": "Delete",
+        "title": "Archive",
         "category": "POC"
       },
       {
@@ -150,12 +150,12 @@
       },
       {
         "command": "poc-vscode-addin.deleteSkillPermanently",
-        "title": "Delete Permanently",
+        "title": "Delete",
         "category": "POC"
       },
       {
         "command": "poc-vscode-addin.deleteSession",
-        "title": "Delete",
+        "title": "Archive",
         "category": "POC"
       },
       {
@@ -165,7 +165,7 @@
       },
       {
         "command": "poc-vscode-addin.deleteSessionPermanently",
-        "title": "Delete Permanently",
+        "title": "Delete",
         "category": "POC"
       }
     ],

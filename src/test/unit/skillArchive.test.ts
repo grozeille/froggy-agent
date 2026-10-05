@@ -55,12 +55,12 @@ suite('skillArchive', () => {
     assert.strictEqual(archiveCopyNameFor('ram-report', 2), 'ram-report-3');
   });
 
-  test('delete/restore/delete-permanently commands are contributed', () => {
+  test('archive/restore/delete commands are contributed', () => {
     const commands = readPackageJson().contributes?.commands ?? [];
     const byId = new Map(commands.map((entry) => [entry.command, entry.title]));
-    assert.strictEqual(byId.get('poc-vscode-addin.deleteSkill'), 'Delete');
+    assert.strictEqual(byId.get('poc-vscode-addin.deleteSkill'), 'Archive');
     assert.strictEqual(byId.get('poc-vscode-addin.restoreSkill'), 'Restore');
-    assert.strictEqual(byId.get('poc-vscode-addin.deleteSkillPermanently'), 'Delete Permanently');
+    assert.strictEqual(byId.get('poc-vscode-addin.deleteSkillPermanently'), 'Delete');
   });
 
   test('skills view context menus target live vs archived skills', () => {

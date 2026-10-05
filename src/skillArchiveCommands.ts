@@ -33,8 +33,8 @@ async function uniqueArchiveDest(dir: vscode.Uri, skillName: string): Promise<vs
 }
 
 /**
- * Skills view archive commands: Delete moves a skill to the archive
- * (reversible, no confirmation), Restore moves it back, Delete Permanently
+ * Skills view archive commands: Archive moves a skill to the archive
+ * (reversible, no confirmation), Restore moves it back, Delete
  * removes an archived skill for good (modal confirmation).
  */
 export function registerSkillArchiveCommands(refresh: () => void): vscode.Disposable[] {
@@ -61,7 +61,7 @@ export function registerSkillArchiveCommands(refresh: () => void): vscode.Dispos
         await vscode.workspace.fs.rename(source, await uniqueArchiveDest(archiveDir, ref.name));
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
-        void vscode.window.showErrorMessage(`Delete failed: ${message}`);
+        void vscode.window.showErrorMessage(`Archive failed: ${message}`);
         return;
       }
       refresh();
@@ -89,7 +89,7 @@ export function registerSkillArchiveCommands(refresh: () => void): vscode.Dispos
       }
       if (await exists(vscode.Uri.joinPath(skillsDir, ref.name))) {
         void vscode.window.showErrorMessage(
-          `A skill named "${ref.name}" already exists. Delete or rename it first.`
+          `A skill named "${ref.name}" already exists. Archive or rename it first.`
         );
         return;
       }
@@ -126,9 +126,9 @@ export function registerSkillArchiveCommands(refresh: () => void): vscode.Dispos
       const confirm = await vscode.window.showWarningMessage(
         `Permanently delete skill "${ref.name}"? This cannot be undone.`,
         { modal: true },
-        'Delete Permanently'
+        'Delete'
       );
-      if (confirm !== 'Delete Permanently') {
+      if (confirm !== 'Delete') {
         return;
       }
       try {

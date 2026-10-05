@@ -18,8 +18,8 @@ function failureMessage(err: unknown): string {
 }
 
 /**
- * Sessions view archive commands: Delete moves a session to the archive
- * (reversible, no confirmation), Restore moves it back, Delete Permanently
+ * Sessions view archive commands: Archive moves a session to the archive
+ * (reversible, no confirmation), Restore moves it back, Delete
  * removes an archived session for good (modal confirmation). The main chat
  * is never listed, so it can never be archived.
  */
@@ -46,7 +46,7 @@ export function registerSessionArchiveCommands(
       try {
         await store.archive(ref.id);
       } catch (err) {
-        void vscode.window.showErrorMessage(`Delete failed: ${failureMessage(err)}`);
+        void vscode.window.showErrorMessage(`Archive failed: ${failureMessage(err)}`);
         return;
       }
       refresh();
@@ -94,9 +94,9 @@ export function registerSessionArchiveCommands(
       const confirm = await vscode.window.showWarningMessage(
         `Permanently delete session "${session.title}"? This cannot be undone.`,
         { modal: true },
-        'Delete Permanently'
+        'Delete'
       );
-      if (confirm !== 'Delete Permanently') {
+      if (confirm !== 'Delete') {
         return;
       }
       try {
