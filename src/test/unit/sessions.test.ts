@@ -14,9 +14,11 @@ import {
   MAX_HISTORY_MESSAGES,
   NEW_SESSION_TITLE,
   recentMessages,
+  renamedSession,
   SESSION_CONTEXT_VALUE,
   titleFromPrompt,
   toReplayItems,
+  validateSessionTitle,
   withArchived,
   withMessage,
   type ChatSession
@@ -261,5 +263,25 @@ suite('sessions', () => {
     const cleared = clearedSession(session, 2000);
     assert.deepStrictEqual(cleared.messages, []);
     assert.strictEqual(cleared.title, MAIN_SESSION_TITLE);
+  });
+
+  test('renamedSession retitles without touching the rest', () => {
+    let session = createSession('abc', 1000);
+    session = withMessage(session, { role: 'user', text: 'hi' }, 1001);
+    const before = { ...session, title: 'Old title' };
+    const renamed = renamedSession(before, '  New title  ');
+    assert.strictEqual(before.title, 'Old title');
+    assert.strictEqual(renamed.id, 'abc');
+    assert.strictEqual(renamed.title, 'New title');
+    assert.strictEqual(renamed.messages.length, 1);
+    assert.strictEqual(renamed.createdAt, 1000);
+    assert.strictEqual(renamed.updatedAt, 1001);
+    assert.strictEqual(renamed.archived, undefined);
+  });
+
+  test('validateSessionTitle rejects blank titles', () => {
+    assert.strictEqual(validateSessionTitle(''), 'Title cannot be empty.');
+    assert.strictEqual(validateSessionTitle('   '), 'Title cannot be empty.');
+    assert.strictEqual(validateSessionTitle('ok'), undefined);
   });
 });

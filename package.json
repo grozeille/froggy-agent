@@ -167,6 +167,11 @@
         "command": "poc-vscode-addin.deleteSessionPermanently",
         "title": "Delete",
         "category": "POC"
+      },
+      {
+        "command": "poc-vscode-addin.renameSession",
+        "title": "Rename",
+        "category": "POC"
       }
     ],
     "menus": {
@@ -264,6 +269,11 @@
           "group": "2_modify"
         },
         {
+          "command": "poc-vscode-addin.renameSession",
+          "when": "view == pocSessionsView && (viewItem == session || viewItem == archivedSession)",
+          "group": "2_modify"
+        },
+        {
           "command": "poc-vscode-addin.deleteSession",
           "when": "view == pocSessionsView && viewItem == session",
           "group": "2_modify"
@@ -355,6 +365,10 @@
         },
         {
           "command": "poc-vscode-addin.deleteSessionPermanently",
+          "when": "never"
+        },
+        {
+          "command": "poc-vscode-addin.renameSession",
           "when": "never"
         }
       ]

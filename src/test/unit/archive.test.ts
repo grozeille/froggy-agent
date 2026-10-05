@@ -50,15 +50,16 @@ suite('archive', () => {
     assert.strictEqual(archiveSummary(3, 'session', 'sessions'), '3 sessions');
   });
 
-  test('session archive/restore/delete commands are contributed', () => {
+  test('session archive/restore/delete/rename commands are contributed', () => {
     const commands = readPackageJson().contributes?.commands ?? [];
     const byId = new Map(commands.map((entry) => [entry.command, entry.title]));
     assert.strictEqual(byId.get('poc-vscode-addin.deleteSession'), 'Archive');
     assert.strictEqual(byId.get('poc-vscode-addin.restoreSession'), 'Restore');
     assert.strictEqual(byId.get('poc-vscode-addin.deleteSessionPermanently'), 'Delete');
+    assert.strictEqual(byId.get('poc-vscode-addin.renameSession'), 'Rename');
   });
 
-  test('sessions view context menus target live vs archived sessions', () => {
+  test('sessions view context menus target live vs archived sessions, plus rename', () => {
     const menus = readPackageJson().contributes?.menus?.['view/item/context'] ?? [];
     const byId = new Map(menus.map((entry) => [entry.command, entry.when]));
     assert.strictEqual(
@@ -73,6 +74,10 @@ suite('archive', () => {
       byId.get('poc-vscode-addin.deleteSessionPermanently'),
       `view == pocSessionsView && viewItem == ${ARCHIVED_SESSION_CONTEXT_VALUE}`
     );
+    assert.strictEqual(
+      byId.get('poc-vscode-addin.renameSession'),
+      `view == pocSessionsView && (viewItem == ${SESSION_CONTEXT_VALUE} || viewItem == ${ARCHIVED_SESSION_CONTEXT_VALUE})`
+    );
   });
 
   test('session archive commands are hidden from the command palette', () => {
@@ -81,7 +86,8 @@ suite('archive', () => {
     for (const id of [
       'poc-vscode-addin.deleteSession',
       'poc-vscode-addin.restoreSession',
-      'poc-vscode-addin.deleteSessionPermanently'
+      'poc-vscode-addin.deleteSessionPermanently',
+      'poc-vscode-addin.renameSession'
     ]) {
       assert.strictEqual(byId.get(id), 'never', id);
     }
