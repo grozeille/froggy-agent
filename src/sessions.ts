@@ -147,6 +147,26 @@ export function titleFromPrompt(prompt: string): string {
   return firstLine.length > max ? `${firstLine.slice(0, max).trimEnd()}…` : firstLine;
 }
 
+/**
+ * Separator to insert before a new turn's text when it joins an answer that
+ * already holds previous turns' text. Always a paragraph break (the panel
+ * renderer only breaks lines on a blank line), reduced when the answer
+ * already ends with one: without it, turns glue together ("...faire.Je
+ * crée...") with not even a line break.
+ */
+export function turnTextSeparator(answerSoFar: string): string {
+  if (!answerSoFar) {
+    return '';
+  }
+  if (/[ \t]*\n[ \t]*\n\s*$/.test(answerSoFar)) {
+    return '';
+  }
+  if (/[ \t]*\n\s*$/.test(answerSoFar)) {
+    return '\n';
+  }
+  return '\n\n';
+}
+
 export function withMessage(session: ChatSession, message: ChatMessage, now: number): ChatSession {
   return { ...session, messages: [...session.messages, message], updatedAt: now };
 }

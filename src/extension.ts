@@ -19,6 +19,8 @@ import { registerCreateSkillTool } from './skillCreateTool';
 import { registerTerminalTool } from './terminalTool';
 import { registerOpenPageTool } from './openPageTool';
 import { registerFetchPageTool } from './fetchPageTool';
+import { registerBrowseWatchTools } from './browseWatchTool';
+import { disposeWatchedBrowser } from './browseWatchDriver';
 import { registerMemoryTools } from './memoryTool';
 import { SessionStore } from './sessionStore';
 
@@ -87,7 +89,7 @@ export function activate(context: vscode.ExtensionContext): void {
     })
   );
 
-  for (const tool of [registerGoogleSearchTool(), registerWebSearchTool(), registerDateTimeTool(), ...registerDataFileTools(), ...registerMemoryTools(), registerRunSkillTool(), registerCreateSkillTool(() => skillsProvider.refresh()), registerAskQuestionsTool(), registerTerminalTool(), registerOpenPageTool(), registerFetchPageTool()]) {
+  for (const tool of [registerGoogleSearchTool(), registerWebSearchTool(), registerDateTimeTool(), ...registerDataFileTools(), ...registerMemoryTools(), registerRunSkillTool(), registerCreateSkillTool(() => skillsProvider.refresh()), registerAskQuestionsTool(), registerTerminalTool(), registerOpenPageTool(), registerFetchPageTool(), ...registerBrowseWatchTools()]) {
     if (tool) {
       context.subscriptions.push(tool);
     }
@@ -115,5 +117,5 @@ export function activate(context: vscode.ExtensionContext): void {
 }
 
 export function deactivate(): void {
-  // No cleanup needed.
+  void disposeWatchedBrowser();
 }

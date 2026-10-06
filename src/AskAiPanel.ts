@@ -31,6 +31,12 @@ import { GOOGLE_SEARCH_TOOL_NAME } from './searchUrl';
 import { WEB_SEARCH_TOOL_NAME } from './webSearch';
 import { OPEN_PAGE_TOOL_NAME } from './openPage';
 import { FETCH_PAGE_TOOL_NAME } from './fetchPage';
+import {
+  BROWSE_OPEN_TOOL_NAME,
+  BROWSE_SCREENSHOT_TOOL_NAME,
+  BROWSE_STATE_TOOL_NAME,
+  browseWatchHint
+} from './browseWatch';
 import { APPEND_MEMORY_TOOL_NAME, READ_MEMORY_TOOL_NAME } from './memory';
 import { MODEL_SETTING_DEFAULT, MODEL_SETTING_KEY, pickChatModel } from './modelSelection';
 import { LIST_DATA_FILES_TOOL_NAME, READ_DATA_FILE_TOOL_NAME } from './dataFiles';
@@ -43,6 +49,9 @@ import {
   needsConfirmation,
   resolveAgentTools,
   summarizeToolInput,
+  formatToolRunning,
+  formatToolStillRunning,
+  toolRunLabel,
   TOOL_SETTING_DEFAULT,
   TOOL_SETTING_KEY,
   type ToolCallDescription
@@ -69,6 +78,7 @@ import {
   recentMessages,
   titleFromPrompt,
   toReplayItems,
+  turnTextSeparator,
   withMessage,
   type ChatSession,
   type ChatToolRun
@@ -285,6 +295,43 @@ export class AskAiPanel {
     this._pendingQuestions.clear();
   }
 
+  /**
+   * Invoke a tool with a live status line: what runs, a heartbeat while it
+   * drags on, then back to "Thinking...". Long silent runs (the skill
+   * factory is a full second model call) would otherwise leave the panel
+   * looking frozen for minutes.
+   */
+  private async _invokeToolWithStatus(
+    sessionId: string,
+    call: vscode.LanguageModelToolCallPart,
+    token: vscode.CancellationToken
+  ): Promise<vscode.LanguageModelToolResult> {
+    const runLabel = toolRunLabel(call.name);
+    await this._panel.webview.postMessage({
+      command: 'status',
+      sessionId,
+      text: formatToolRunning(runLabel)
+    });
+    const startedAt = Date.now();
+    const heartbeat = setInterval(() => {
+      void this._panel.webview.postMessage({
+        command: 'status',
+        sessionId,
+        text: formatToolStillRunning(runLabel, Date.now() - startedAt)
+      });
+    }, TOOL_STATUS_HEARTBEAT_MS);
+    try {
+      return await vscode.lm.invokeTool(
+        call.name,
+        { input: call.input, toolInvocationToken: undefined },
+        token
+      );
+    } finally {
+      clearInterval(heartbeat);
+      await this._panel.webview.postMessage({ command: 'status', sessionId, text: 'Thinking...' });
+    }
+  }
+
   /** Refresh the panel badge; failures surface later when asking. */
   private async _postEffectiveModel(sessionId: string): Promise<void> {
     try {
@@ -353,8 +400,8 @@ export class AskAiPanel {
       await webview.postMessage({ command: 'model', sessionId, name: model.name });
       // Agent mode: the model may call tools. Calls run silently — the panel
       // keeps showing "Thinking...". Builtins (date/time, data files, browser,
-      // web search + page fetch, memory, questions, skill runner, skill factory
-      // and terminal runner) plus the extra names from the tools setting; file
+      // web search + page fetch, watched browser, memory, questions, skill runner,
+      // skill factory and terminal runner) plus the extra names from the tools setting; file
       // tools resolve paths inside <workspace>/data implicitly. External terminal
       // tools are dropped when the builtin is available so a run never asks
       // twice (in-chat card + native popup).
@@ -366,6 +413,9 @@ export class AskAiPanel {
         WEB_SEARCH_TOOL_NAME,
         OPEN_PAGE_TOOL_NAME,
         FETCH_PAGE_TOOL_NAME,
+        BROWSE_OPEN_TOOL_NAME,
+        BROWSE_STATE_TOOL_NAME,
+        BROWSE_SCREENSHOT_TOOL_NAME,
         READ_MEMORY_TOOL_NAME,
         APPEND_MEMORY_TOOL_NAME,
         ASK_QUESTIONS_TOOL_NAME,
@@ -387,8 +437,8 @@ export class AskAiPanel {
       // named when actually offered) + runnable skill catalog (so matching
       // requests route to the skill runner instead of the terminal) +
       // skill-factory nudge (creation requests delegate to the builder
-      // agent) + clarify-when-ambiguous nudge + structured-questions nudge
-      // (only named when offered).
+      // agent) + watched-browser observe nudge + clarify-when-ambiguous nudge +
+      // structured-questions nudge (only named when offered).
       const offeredNames = tools.map((tool) => tool.name);
       const skillsHint = offeredNames.includes(RUN_SKILL_TOOL_NAME)
         ? formatSkillsHint(await listRunnableSkills(), RUN_SKILL_TOOL_NAME)
@@ -404,6 +454,7 @@ export class AskAiPanel {
         terminalToolHint(offeredNames) +
         historyGroundingHint() +
         webSearchHint(offeredNames) +
+        browseWatchHint(offeredNames) +
         clarificationHint() +
         skillsHint +
         createSkillHint +
@@ -448,11 +499,26 @@ export class AskAiPanel {
         }
         const response = await model.sendRequest(messages, { tools }, token);
         const toolCalls: vscode.LanguageModelToolCallPart[] = [];
+        let turnHasText = false;
         for await (const part of response.stream) {
           if (run.cancelled) {
             break;
           }
           if (part instanceof vscode.LanguageModelTextPart) {
+            // New turn joining an existing answer: paragraph-break first, so
+            // step sentences never glue together without a line break. The
+            // separator rides as a chunk too, keeping the live bubble and the
+            // saved transcript identical.
+            if (part.value && !turnHasText) {
+              const separator = turnTextSeparator(answer);
+              if (separator) {
+                answer += separator;
+                await webview.postMessage({ command: 'chunk', sessionId, text: separator });
+              }
+            }
+            if (part.value) {
+              turnHasText = true;
+            }
             answer += part.value;
             await webview.postMessage({ command: 'chunk', sessionId, text: part.value });
           } else if (part instanceof vscode.LanguageModelToolCallPart) {
@@ -549,11 +615,7 @@ export class AskAiPanel {
               });
               continue;
             }
-            const result = await vscode.lm.invokeTool(
-              call.name,
-              { input: call.input, toolInvocationToken: undefined },
-              token
-            );
+            const result = await this._invokeToolWithStatus(sessionId, call, token);
             output = truncateOutput(stripAnsi(toolResultText(result.content)), 2000);
             commands = takeRunCommands();
             toolResults.push(new vscode.LanguageModelToolResultPart(call.callId, result.content));
@@ -684,6 +746,9 @@ export class AskAiPanel {
 </html>`;
   }
 }
+
+/** Still-running heartbeat while a tool executes (slow factory, long command). */
+const TOOL_STATUS_HEARTBEAT_MS = 15_000;
 
 function toolResultText(content: vscode.LanguageModelToolResult['content']): string {
   return content
