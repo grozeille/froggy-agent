@@ -40,6 +40,7 @@ import {
 import { APPEND_MEMORY_TOOL_NAME, READ_MEMORY_TOOL_NAME } from './memory';
 import { MODEL_SETTING_DEFAULT, MODEL_SETTING_KEY, pickChatModel } from './modelSelection';
 import { LIST_DATA_FILES_TOOL_NAME, READ_DATA_FILE_TOOL_NAME } from './dataFiles';
+import { REFRESH_FILES_TOOL_NAME, refreshFilesHint } from './refreshFiles';
 import { RUN_SKILL_TOOL_NAME } from './skillRun';
 import {
   CONFIRM_SETTING_DEFAULT,
@@ -401,7 +402,7 @@ export class AskAiPanel {
       // Agent mode: the model may call tools. Calls run silently — the panel
       // keeps showing "Thinking...". Builtins (date/time, data files, browser,
       // web search + page fetch, watched browser, memory, questions, skill runner,
-      // skill factory and terminal runner) plus the extra names from the tools setting; file
+      // skill factory, terminal runner and files refresh) plus the extra names from the tools setting; file
       // tools resolve paths inside <workspace>/data implicitly. External terminal
       // tools are dropped when the builtin is available so a run never asks
       // twice (in-chat card + native popup).
@@ -409,6 +410,7 @@ export class AskAiPanel {
         DATE_TIME_TOOL_NAME,
         READ_DATA_FILE_TOOL_NAME,
         LIST_DATA_FILES_TOOL_NAME,
+        REFRESH_FILES_TOOL_NAME,
         GOOGLE_SEARCH_TOOL_NAME,
         WEB_SEARCH_TOOL_NAME,
         OPEN_PAGE_TOOL_NAME,
@@ -437,7 +439,7 @@ export class AskAiPanel {
       // named when actually offered) + runnable skill catalog (so matching
       // requests route to the skill runner instead of the terminal) +
       // skill-factory nudge (creation requests delegate to the builder
-      // agent) + watched-browser observe nudge + clarify-when-ambiguous nudge +
+      // agent) + watched-browser observe nudge + files-refresh nudge + clarify-when-ambiguous nudge +
       // structured-questions nudge (only named when offered).
       const offeredNames = tools.map((tool) => tool.name);
       const skillsHint = offeredNames.includes(RUN_SKILL_TOOL_NAME)
@@ -455,6 +457,7 @@ export class AskAiPanel {
         historyGroundingHint() +
         webSearchHint(offeredNames) +
         browseWatchHint(offeredNames) +
+        refreshFilesHint(offeredNames) +
         clarificationHint() +
         skillsHint +
         createSkillHint +

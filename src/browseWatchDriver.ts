@@ -167,6 +167,13 @@ async function activePage(): Promise<Page> {
   return page ?? browser.newPage();
 }
 
+/** Launch the watched browser and bring its window forward (no navigation). */
+export async function showWatchedBrowser(): Promise<{ browser: string }> {
+  const page = await activePage();
+  await page.bringToFront().catch(() => undefined);
+  return { browser: browserLabel };
+}
+
 /** Navigate the watched browser to a URL (already validated by the tool). */
 export async function openWatchedPage(url: string): Promise<{ url: string; browser: string }> {
   const page = await activePage();

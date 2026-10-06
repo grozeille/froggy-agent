@@ -8,7 +8,8 @@ tree view and a central Ask AI panel with two-way message passing.
 - Activity-bar container (`Froggy Agent`) with four tree views, each with its own
   collapsible header like the standard Explorer: `Ask AI`, `Sessions`,
   `Files` and `Skills`.
-- `Ask AI` holds `Main chat` and `Memory` (`<workspace>/memory.md`),
+- `Ask AI` holds `Main chat`, `Memory` (`<workspace>/memory.md`) and
+  `Open Browser` (starts the watched browser),
   `Sessions` lists chat sessions (newest first, main chat excluded) with an
   `Archive` node, `Files` lists
   `<workspace>/data` files and subfolders with explorer-like actions (new
@@ -38,8 +39,10 @@ tree view and a central Ask AI panel with two-way message passing.
   summarized with sources), watched-browser observe, memory read/append
   (`<workspace>/memory.md`), the skill runner
   (`.github/skills/<name>/run.py`), the skill factory (new skills built by a
-  Python-dev sub-agent), and the terminal runner (shell commands
-  from the workspace root, confirmed in-chat); extra tool names from the
+  Python-dev sub-agent), the terminal runner (shell commands
+  from the workspace root, confirmed in-chat) and the files-view refresh
+  (the model calls it after creating, modifying, moving, renaming or
+  deleting files, so the Files view lists the change); extra tool names from the
   `froggy-agent.tools` setting (empty by default: builtins only, so every
   confirmation happens in-chat and no native popup ever shows). After a
   question that ran tools, a "See action
@@ -159,7 +162,8 @@ console errors; `#browseOpen` navigates it; `#browseScreenshot` sends a PNG
 to vision-capable models). The first call starts system Chrome or Edge when
 installed, the downloaded bundled Chromium otherwise, in a visible window
 the user drives; logins persist in `<workspace>/.froggy-browser/`
-(gitignored, never committed). The browser launches with the Chromium
+(gitignored, never committed). An `Open Browser` row below `Memory` in
+the Ask AI view starts it on demand. The browser launches with the Chromium
 sandbox kept on and no automation switches (no `--no-sandbox` or
 unsupported-flag banner); `navigator.webdriver` is masked in-page instead,
 so sign-in pages that refuse automation-driven browsers (notably Google)

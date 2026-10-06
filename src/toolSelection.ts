@@ -178,6 +178,8 @@ export function toolRunLabel(toolName: string): string {
       return 'Updating memory';
     case 'froggyDateTime':
       return 'Reading the date';
+    case 'froggyRefreshFiles':
+      return 'Refreshing the Files view';
     case 'froggyAskQuestions':
       return 'Asking questions';
     default:

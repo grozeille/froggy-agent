@@ -22,6 +22,7 @@
     "onCommand:froggy-agent.clearSession",
     "onCommand:froggy-agent.openSession",
     "onCommand:froggy-agent.openMainChat",
+    "onCommand:froggy-agent.openBrowser",
     "onCommand:froggy-agent.refreshExplorer",
     "onCommand:froggy-agent.setupProject"
   ],
@@ -85,6 +86,12 @@
         "title": "Froggy Agent: Open Main Chat",
         "category": "Froggy Agent",
         "icon": "$(comment-discussion)"
+      },
+      {
+        "command": "froggy-agent.openBrowser",
+        "title": "Froggy Agent: Open Browser",
+        "category": "Froggy Agent",
+        "icon": "$(globe)"
       },
       {
         "command": "froggy-agent.refreshExplorer",
@@ -574,6 +581,19 @@
               "description": "Subfolder relative to the data folder. Omit for the root."
             }
           },
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "froggyRefreshFiles",
+        "displayName": "Refresh Files View",
+        "userDescription": "Refresh the Files view after file changes.",
+        "modelDescription": "Refreshes the Files sidebar view so it lists created, modified, moved, renamed or deleted files. Call it after changing files on disk (terminal commands, skill scripts) and before answering, so the user sees the result.",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "refreshFiles",
+        "inputSchema": {
+          "type": "object",
+          "properties": {},
           "additionalProperties": false
         }
       },

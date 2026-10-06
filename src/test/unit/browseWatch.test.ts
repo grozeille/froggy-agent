@@ -37,6 +37,24 @@ function readLanguageModelTools(): LanguageModelToolDef[] {
   return pkg.contributes?.languageModelTools ?? [];
 }
 
+interface CommandDef {
+  command: string;
+  title?: string;
+  icon?: string;
+}
+
+function readCommandContrib(): { commands: CommandDef[]; activationEvents: string[] } {
+  const file = path.join(__dirname, '..', '..', '..', 'package.json');
+  const pkg = JSON.parse(fs.readFileSync(file, 'utf8')) as {
+    activationEvents?: string[];
+    contributes?: { commands?: CommandDef[] };
+  };
+  return {
+    commands: pkg.contributes?.commands ?? [],
+    activationEvents: pkg.activationEvents ?? []
+  };
+}
+
 suite('browseWatch', () => {
   test('launch attempts prefer system Chrome, then Edge, then bundled Chromium', () => {
     assert.deepStrictEqual(browseLaunchAttempts(), [
@@ -229,6 +247,17 @@ suite('browseWatch', () => {
     assert.strictEqual(BROWSE_OPEN_TOOL_NAME, 'froggyBrowseOpen');
     assert.strictEqual(BROWSE_STATE_TOOL_NAME, 'froggyBrowseState');
     assert.strictEqual(BROWSE_SCREENSHOT_TOOL_NAME, 'froggyBrowseScreenshot');
+  });
+
+  test('package.json contributes the Open Browser command', () => {
+    const contrib = readCommandContrib();
+    const command = contrib.commands.find((entry) => entry.command === 'froggy-agent.openBrowser');
+    assert.ok(command, 'froggy-agent.openBrowser contributed');
+    assert.strictEqual(command?.title, 'Froggy Agent: Open Browser');
+    assert.ok(
+      contrib.activationEvents.includes('onCommand:froggy-agent.openBrowser'),
+      'activates from the command palette'
+    );
   });
 
   test('package.json contributes the three browse tools', () => {

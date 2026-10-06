@@ -13,6 +13,7 @@ import { registerGoogleSearchTool } from './searchTool';
 import { registerWebSearchTool } from './webSearchTool';
 import { registerDateTimeTool } from './dateTimeTool';
 import { registerDataFileTools } from './dataFilesTool';
+import { registerRefreshFilesTool } from './refreshFilesTool';
 import { registerRunSkillTool } from './skillRunTool';
 import { registerAskQuestionsTool } from './askQuestionsTool';
 import { registerCreateSkillTool } from './skillCreateTool';
@@ -20,7 +21,7 @@ import { registerTerminalTool } from './terminalTool';
 import { registerOpenPageTool } from './openPageTool';
 import { registerFetchPageTool } from './fetchPageTool';
 import { registerBrowseWatchTools } from './browseWatchTool';
-import { disposeWatchedBrowser } from './browseWatchDriver';
+import { disposeWatchedBrowser, showWatchedBrowser } from './browseWatchDriver';
 import { registerMemoryTools } from './memoryTool';
 import { SessionStore } from './sessionStore';
 
@@ -73,6 +74,18 @@ export function activate(context: vscode.ExtensionContext): void {
       const session = await store.getOrCreateMain();
       await AskAiPanel.createOrShow(context.extensionUri, store, session.id);
     }),
+    vscode.commands.registerCommand('froggy-agent.openBrowser', async () => {
+      try {
+        const shown = await showWatchedBrowser();
+        vscode.window.showInformationMessage(
+          `Watched browser opened (${shown.browser}). Browse, then ask about your page in the chat.`
+        );
+      } catch (err) {
+        vscode.window.showErrorMessage(
+          `Could not open the watched browser: ${err instanceof Error ? err.message : String(err)}`
+        );
+      }
+    }),
     vscode.commands.registerCommand('froggy-agent.refreshExplorer', () => {
       sessionsProvider.refresh();
       filesProvider.refresh();
@@ -89,7 +102,7 @@ export function activate(context: vscode.ExtensionContext): void {
     })
   );
 
-  for (const tool of [registerGoogleSearchTool(), registerWebSearchTool(), registerDateTimeTool(), ...registerDataFileTools(), ...registerMemoryTools(), registerRunSkillTool(), registerCreateSkillTool(() => skillsProvider.refresh()), registerAskQuestionsTool(), registerTerminalTool(), registerOpenPageTool(), registerFetchPageTool(), ...registerBrowseWatchTools()]) {
+  for (const tool of [registerGoogleSearchTool(), registerWebSearchTool(), registerDateTimeTool(), ...registerDataFileTools(), registerRefreshFilesTool(() => filesProvider.refresh()), ...registerMemoryTools(), registerRunSkillTool(), registerCreateSkillTool(() => skillsProvider.refresh()), registerAskQuestionsTool(), registerTerminalTool(), registerOpenPageTool(), registerFetchPageTool(), ...registerBrowseWatchTools()]) {
     if (tool) {
       context.subscriptions.push(tool);
     }

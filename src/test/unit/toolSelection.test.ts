@@ -182,6 +182,7 @@ suite('toolSelection', () => {
     assert.strictEqual(toolRunLabel('froggyBrowseState'), 'Reading the watched browser');
     assert.strictEqual(toolRunLabel('froggyWebSearch'), 'Searching the web');
     assert.strictEqual(toolRunLabel('froggyDateTime'), 'Reading the date');
+    assert.strictEqual(toolRunLabel('froggyRefreshFiles'), 'Refreshing the Files view');
   });
 
   test('toolRunLabel falls back to the raw name for external tools', () => {
