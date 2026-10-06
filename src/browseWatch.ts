@@ -63,14 +63,14 @@ export function describeBrowseLaunch(attempt: BrowseLaunchAttempt): string {
 }
 
 /**
- * Extra Chromium switches for the watched browser launch.
- * `AutomationControlled` is disabled so `navigator.webdriver` stays false:
- * bot protections (notably Google sign-in) refuse automation-driven
- * browsers otherwise. Playwright driving (CDP) is unaffected.
+ * Init script evaluated in every watched-browser page: it reports
+ * `navigator.webdriver` as false so bot protections (notably Google
+ * sign-in) accept the browser. Done in-page rather than with the
+ * `--disable-blink-features=AutomationControlled` switch, which Chrome
+ * banners as an unsupported command-line flag.
  */
-export const BROWSE_LAUNCH_ARGS: readonly string[] = [
-  '--disable-blink-features=AutomationControlled'
-];
+export const BROWSE_WEBDRIVER_INIT_SCRIPT =
+  "Object.defineProperty(navigator, 'webdriver', { get: () => false });";
 
 /**
  * Playwright default args filtered out of the watched browser launch.
@@ -92,7 +92,12 @@ export interface BrowseLaunchOptions {
    * flag; the watched browser is user-driven, so it needs no exemption.
    */
   readonly chromiumSandbox: true;
-  readonly args: readonly string[];
+  /**
+   * No fixed viewport: Playwright defaults to 1280x720, which freezes the
+   * page size when the user resizes the window. `null` makes the page
+   * follow the host window size instead (it is user-driven).
+   */
+  readonly viewport: null;
   readonly ignoreDefaultArgs: readonly string[];
 }
 
@@ -102,7 +107,7 @@ export function browseLaunchOptions(attempt: BrowseLaunchAttempt): BrowseLaunchO
     channel: attempt.channel,
     headless: false,
     chromiumSandbox: true,
-    args: BROWSE_LAUNCH_ARGS,
+    viewport: null,
     ignoreDefaultArgs: BROWSE_LAUNCH_IGNORE_DEFAULT_ARGS
   };
 }

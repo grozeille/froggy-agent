@@ -160,9 +160,10 @@ to vision-capable models). The first call starts system Chrome or Edge when
 installed, the downloaded bundled Chromium otherwise, in a visible window
 the user drives; logins persist in `<workspace>/.froggy-browser/`
 (gitignored, never committed). The browser launches with the Chromium
-sandbox kept on (no `--no-sandbox` banner) and automation fingerprints
-hidden (`navigator.webdriver` off, no automation infobar), so sign-in pages
-that refuse automation-driven browsers (notably Google) accept it.
+sandbox kept on and no automation switches (no `--no-sandbox` or
+unsupported-flag banner); `navigator.webdriver` is masked in-page instead,
+so sign-in pages that refuse automation-driven browsers (notably Google)
+accept it.
 
 Project setup: on a virgin folder (no `memory.md`, `data/` or
 `.github/skills/`) the extension offers to scaffold a project; `Froggy Agent:

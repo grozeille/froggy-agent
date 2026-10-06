@@ -3,6 +3,7 @@ import type { BrowserContext, Page } from 'playwright-core';
 import {
   BROWSE_GITIGNORE_ENTRY,
   BROWSE_MAX_CONSOLE_ERRORS_KEPT,
+  BROWSE_WEBDRIVER_INIT_SCRIPT,
   browseLaunchAttempts,
   browseLaunchOptions,
   describeBrowseLaunch,
@@ -99,9 +100,10 @@ async function launchAttempt(
     channel: options.channel,
     headless: options.headless,
     chromiumSandbox: options.chromiumSandbox,
-    args: [...options.args],
+    viewport: options.viewport,
     ignoreDefaultArgs: [...options.ignoreDefaultArgs]
   });
+  await launched.addInitScript(BROWSE_WEBDRIVER_INIT_SCRIPT);
   browserLabel = describeBrowseLaunch(attempt);
   for (const page of launched.pages()) {
     watchPage(page);

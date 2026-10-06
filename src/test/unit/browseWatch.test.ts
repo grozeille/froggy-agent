@@ -3,7 +3,6 @@ import * as fs from 'fs';
 import * as path from 'path';
 import {
   BROWSE_GITIGNORE_ENTRY,
-  BROWSE_LAUNCH_ARGS,
   BROWSE_LAUNCH_IGNORE_DEFAULT_ARGS,
   BROWSE_MAX_CONSOLE_ERRORS_KEPT,
   BROWSE_MAX_CONSOLE_ERRORS_SHOWN,
@@ -12,6 +11,7 @@ import {
   BROWSE_PROFILE_DIR_NAME,
   BROWSE_SCREENSHOT_TOOL_NAME,
   BROWSE_STATE_TOOL_NAME,
+  BROWSE_WEBDRIVER_INIT_SCRIPT,
   browseLaunchAttempts,
   browseLaunchOptions,
   browseWatchHint,
@@ -57,7 +57,7 @@ suite('browseWatch', () => {
       channel: 'chrome',
       headless: false,
       chromiumSandbox: true,
-      args: BROWSE_LAUNCH_ARGS,
+      viewport: null,
       ignoreDefaultArgs: BROWSE_LAUNCH_IGNORE_DEFAULT_ARGS
     });
     const bundled = browseLaunchOptions({});
@@ -66,15 +66,19 @@ suite('browseWatch', () => {
     assert.strictEqual(bundled.chromiumSandbox, true);
   });
 
-  test('launch flags hide automation fingerprints (Google sign-in)', () => {
-    assert.ok(
-      BROWSE_LAUNCH_ARGS.includes('--disable-blink-features=AutomationControlled'),
-      'navigator.webdriver stays false'
-    );
+  test('launch ignores the automation flag (no automation infobar)', () => {
     assert.ok(
       BROWSE_LAUNCH_IGNORE_DEFAULT_ARGS.includes('--enable-automation'),
       'no automation infobar'
     );
+  });
+
+  test('webdriver init script reports navigator.webdriver as false', () => {
+    const runInFakePage = new Function(
+      'navigator',
+      `${BROWSE_WEBDRIVER_INIT_SCRIPT}\nreturn navigator.webdriver;`
+    ) as (fakeNavigator: { webdriver: unknown }) => unknown;
+    assert.strictEqual(runInFakePage({ webdriver: true }), false);
   });
 
   test('resolveBrowseChannel prefers Chrome, then Edge', () => {
