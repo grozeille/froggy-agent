@@ -22,6 +22,7 @@
     "onCommand:froggy-agent.clearSession",
     "onCommand:froggy-agent.openSession",
     "onCommand:froggy-agent.openMainChat",
+    "onCommand:froggy-agent.openBrowser",
     "onCommand:froggy-agent.refreshExplorer",
     "onCommand:froggy-agent.setupProject"
   ],
@@ -85,6 +86,12 @@
         "title": "Froggy Agent: Open Main Chat",
         "category": "Froggy Agent",
         "icon": "$(comment-discussion)"
+      },
+      {
+        "command": "froggy-agent.openBrowser",
+        "title": "Froggy Agent: Open Browser",
+        "category": "Froggy Agent",
+        "icon": "$(globe)"
       },
       {
         "command": "froggy-agent.refreshExplorer",
@@ -578,6 +585,19 @@
         }
       },
       {
+        "name": "froggyRefreshFiles",
+        "displayName": "Refresh Files View",
+        "userDescription": "Refresh the Files view after file changes.",
+        "modelDescription": "Refreshes the Files sidebar view so it lists created, modified, moved, renamed or deleted files. Call it after changing files on disk (terminal commands, skill scripts) and before answering, so the user sees the result.",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "refreshFiles",
+        "inputSchema": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": false
+        }
+      },
+      {
         "name": "froggyRunTerminal",
         "displayName": "Run Terminal Command",
         "userDescription": "Run a shell command and return its output.",
@@ -616,6 +636,51 @@
             }
           },
           "required": ["url"],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "froggyBrowseOpen",
+        "displayName": "Open Page in Watched Browser",
+        "userDescription": "Open a web page in the watched external browser.",
+        "modelDescription": "Opens the given web page in the watched external browser (a visible Chrome, Edge or Chromium window driven by the user, with a persistent profile). Use when the user asks to open, show or visit a page in the watched browser. Only http(s) URLs.",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "browseOpen",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "url": {
+              "type": "string",
+              "description": "The full http(s) URL of the page to open."
+            }
+          },
+          "required": ["url"],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "froggyBrowseState",
+        "displayName": "Read Watched Browser",
+        "userDescription": "Read the watched browser's current URL, title, text and console errors.",
+        "modelDescription": "Reads the watched external browser's current page: URL, title, rendered text (post-JavaScript) truncated to 8000 characters, and recent console errors. Use when the user asks what you see on their page or what is displayed in their browser. Starts the browser (system Chrome or Edge when installed, bundled Chromium otherwise) when it is not running.",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "browseState",
+        "inputSchema": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "froggyBrowseScreenshot",
+        "displayName": "Screenshot Watched Browser",
+        "userDescription": "Capture the watched browser's current page as an image.",
+        "modelDescription": "Captures the watched external browser's current page as a PNG image. Only models with vision support can use it: if you cannot see images, use the \"froggyBrowseState\" tool instead. Use when the user asks what their page looks like visually.",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "browseScreenshot",
+        "inputSchema": {
+          "type": "object",
+          "properties": {},
           "additionalProperties": false
         }
       },
@@ -693,6 +758,9 @@
     "test": "vscode-test",
     "test:unit": "npm run compile && mocha --ui tdd \"out/test/unit/**/*.test.js\"",
     "lint": "eslint src"
+  },
+  "dependencies": {
+    "playwright-core": "^1.63.0"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.10",

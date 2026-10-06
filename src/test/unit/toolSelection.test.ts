@@ -10,7 +10,10 @@ import {
   resolveAgentTools,
   summarizeToolInput,
   TOOL_SETTING_DEFAULT,
-  TOOL_SETTING_KEY
+  TOOL_SETTING_KEY,
+  formatToolRunning,
+  formatToolStillRunning,
+  toolRunLabel
 } from '../../toolSelection';
 
 interface ToolsSettingDef {
@@ -169,6 +172,37 @@ suite('toolSelection', () => {
     assert.strictEqual(TOOL_SETTING_KEY, 'tools');
     assert.deepStrictEqual(readToolsSetting()?.default, [...TOOL_SETTING_DEFAULT]);
     assert.deepStrictEqual([...TOOL_SETTING_DEFAULT], []);
+  });
+
+  test('toolRunLabel names builtin runs in plain words', () => {
+    assert.strictEqual(toolRunLabel('froggyCreateSkill'), 'Building the skill');
+    assert.strictEqual(toolRunLabel('froggyRunSkill'), 'Running the skill');
+    assert.strictEqual(toolRunLabel('froggyRunTerminal'), 'Running the command');
+    assert.strictEqual(toolRunLabel('run_in_terminal'), 'Running the command');
+    assert.strictEqual(toolRunLabel('froggyBrowseState'), 'Reading the watched browser');
+    assert.strictEqual(toolRunLabel('froggyWebSearch'), 'Searching the web');
+    assert.strictEqual(toolRunLabel('froggyDateTime'), 'Reading the date');
+    assert.strictEqual(toolRunLabel('froggyRefreshFiles'), 'Refreshing the Files view');
+  });
+
+  test('toolRunLabel falls back to the raw name for external tools', () => {
+    assert.strictEqual(toolRunLabel('mysteryTool'), 'Running mysteryTool');
+  });
+
+  test('tool running status shows the start and the still-running heartbeat', () => {
+    assert.strictEqual(formatToolRunning('Building the skill'), 'Building the skill…');
+    assert.strictEqual(
+      formatToolStillRunning('Building the skill', 15000),
+      'Still building the skill… (15s)'
+    );
+    assert.strictEqual(
+      formatToolStillRunning('Running the command', 1499),
+      'Still running the command… (1s)'
+    );
+    assert.strictEqual(
+      formatToolStillRunning('Running the command', -5),
+      'Still running the command… (0s)'
+    );
   });
 
   test('package.json contributes the confirmTools setting default', () => {

@@ -8,7 +8,8 @@ tree view and a central Ask AI panel with two-way message passing.
 - Activity-bar container (`Froggy Agent`) with four tree views, each with its own
   collapsible header like the standard Explorer: `Ask AI`, `Sessions`,
   `Files` and `Skills`.
-- `Ask AI` holds `Main chat` and `Memory` (`<workspace>/memory.md`),
+- `Ask AI` holds `Main chat`, `Memory` (`<workspace>/memory.md`) and
+  `Open Browser` (starts the watched browser),
   `Sessions` lists chat sessions (newest first, main chat excluded) with an
   `Archive` node, `Files` lists
   `<workspace>/data` files and subfolders with explorer-like actions (new
@@ -27,16 +28,21 @@ tree view and a central Ask AI panel with two-way message passing.
   `Thinking...` while the model responds. The effective model
   is shown in the panel badge. Sessions persist in
   `globalState` and reopen with their full transcript. Agent mode: the model
-  can call tools silently — tool calls never appear in the panel. Builtins:
+  can call tools silently — tool calls never appear in the panel, only a
+  one-line running status (`Building the skill…`) with a still-running
+  heartbeat on slow runs. Multi-turn answers are paragraph-separated, so step
+  sentences never glue together. Builtins:
   date/time, read/list files in `<workspace>/data` (paths the user mentions
   resolve inside `data/` implicitly: relative only, `..` rejected), Google
   search and opening any page in the Simple Browser, internet search with
   page fetch (explicit "using internet" requests are researched and
-  summarized with sources), memory read/append (`<workspace>/memory.md`),
-  the skill runner
+  summarized with sources), watched-browser observe, memory read/append
+  (`<workspace>/memory.md`), the skill runner
   (`.github/skills/<name>/run.py`), the skill factory (new skills built by a
-  Python-dev sub-agent), and the terminal runner (shell commands
-  from the workspace root, confirmed in-chat); extra tool names from the
+  Python-dev sub-agent), the terminal runner (shell commands
+  from the workspace root, confirmed in-chat) and the files-view refresh
+  (the model calls it after creating, modifying, moving, renaming or
+  deleting files, so the Files view lists the change); extra tool names from the
   `froggy-agent.tools` setting (empty by default: builtins only, so every
   confirmation happens in-chat and no native popup ever shows). After a
   question that ran tools, a "See action
@@ -148,6 +154,21 @@ results with their sources; it reads a promising result in full via
 `#fetchWebPage` (public pages only, truncated to 8KB). Plain questions
 never trigger a search — only explicit internet requests do.
 
+Watched browser: the Simple Browser is opaque to the agent (another
+extension's webview, no URL or DOM access), so "what do you see on my page?"
+is answered from a real external browser driven by Playwright
+(`#browseState`: URL, title, post-JavaScript text truncated to 8KB, recent
+console errors; `#browseOpen` navigates it; `#browseScreenshot` sends a PNG
+to vision-capable models). The first call starts system Chrome or Edge when
+installed, the downloaded bundled Chromium otherwise, in a visible window
+the user drives; logins persist in `<workspace>/.froggy-browser/`
+(gitignored, never committed). An `Open Browser` row below `Memory` in
+the Ask AI view starts it on demand. The browser launches with the Chromium
+sandbox kept on and no automation switches (no `--no-sandbox` or
+unsupported-flag banner); `navigator.webdriver` is masked in-page instead,
+so sign-in pages that refuse automation-driven browsers (notably Google)
+accept it.
+
 Project setup: on a virgin folder (no `memory.md`, `data/` or
 `.github/skills/`) the extension offers to scaffold a project; `Froggy Agent:
 Setup Project` runs it any time. Setup creates `data/`, `memory.md` (bare
@@ -215,6 +236,14 @@ Extension -> webview (each message carries its `sessionId`):
   tool (`#fetchWebPage`), fetches a public page as text for the model to read
   (local URLs refused); `src/htmlText.ts` holds the shared HTML-to-text
   helpers (unit-tested)
+- `src/browseWatchTool.ts` + `src/browseWatch.ts` — `froggyBrowseOpen`
+  (`#browseOpen`), `froggyBrowseState` (`#browseState`) and
+  `froggyBrowseScreenshot` (`#browseScreenshot`) language model tools:
+  navigate, read (URL, title, post-JS text, console errors) and screenshot
+  the watched external browser (unit-tested)
+- `src/browseWatchDriver.ts` — Playwright persistent context in
+  `<workspace>/.froggy-browser/`: system Chrome/Edge first, bundled
+  Chromium fallback, console-error capture
 - `src/memoryTool.ts` + `src/memory.ts` — `froggyReadMemory` (`#readMemory`)
   and `froggyAppendMemory` (`#appendMemory`) language model tools, read and
   append one-line facts in `<workspace>/memory.md` (unit-tested)

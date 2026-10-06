@@ -18,6 +18,7 @@ import {
   SESSION_CONTEXT_VALUE,
   titleFromPrompt,
   toReplayItems,
+  turnTextSeparator,
   validateSessionTitle,
   withArchived,
   withMessage,
@@ -277,6 +278,15 @@ suite('sessions', () => {
     assert.strictEqual(renamed.createdAt, 1000);
     assert.strictEqual(renamed.updatedAt, 1001);
     assert.strictEqual(renamed.archived, undefined);
+  });
+
+  test('turnTextSeparator breaks paragraphs between turns', () => {
+    assert.strictEqual(turnTextSeparator('First turn.'), '\n\n');
+    assert.strictEqual(turnTextSeparator('First turn. '), '\n\n');
+    assert.strictEqual(turnTextSeparator('First turn.\n'), '\n');
+    assert.strictEqual(turnTextSeparator('First turn.\n\n'), '');
+    assert.strictEqual(turnTextSeparator('First turn.\n\n  '), '');
+    assert.strictEqual(turnTextSeparator(''), '');
   });
 
   test('validateSessionTitle rejects blank titles', () => {

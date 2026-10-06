@@ -141,6 +141,66 @@ export function describeToolCall(
   return { title: `Run "${toolName}"?`, detail: summarizeToolInput(input, maxChars) };
 }
 
+/**
+ * Friendly gerund phrase for a tool run, shown in the panel status line
+ * while the tool executes ("Building the skill…"). Unknown (external) tools
+ * fall back to their raw name.
+ */
+export function toolRunLabel(toolName: string): string {
+  switch (toolName) {
+    case 'froggyCreateSkill':
+      return 'Building the skill';
+    case 'froggyRunSkill':
+      return 'Running the skill';
+    case 'froggyRunTerminal':
+    case 'run_in_terminal':
+    case 'send_to_terminal':
+      return 'Running the command';
+    case 'froggyWebSearch':
+      return 'Searching the web';
+    case 'froggyFetchWebPage':
+      return 'Reading the page';
+    case 'froggyGoogleSearch':
+      return 'Searching Google';
+    case 'froggyOpenBrowserPage':
+    case 'froggyBrowseOpen':
+      return 'Opening the page';
+    case 'froggyBrowseState':
+      return 'Reading the watched browser';
+    case 'froggyBrowseScreenshot':
+      return 'Capturing the screenshot';
+    case 'froggyReadDataFile':
+    case 'froggyListDataFiles':
+      return 'Reading data files';
+    case 'froggyReadMemory':
+      return 'Reading memory';
+    case 'froggyAppendMemory':
+      return 'Updating memory';
+    case 'froggyDateTime':
+      return 'Reading the date';
+    case 'froggyRefreshFiles':
+      return 'Refreshing the Files view';
+    case 'froggyAskQuestions':
+      return 'Asking questions';
+    default:
+      return `Running ${toolName}`;
+  }
+}
+
+/** Status line posted when a tool run starts. */
+export function formatToolRunning(label: string): string {
+  return `${label}…`;
+}
+
+/**
+ * Heartbeat status line while a tool run drags on (slow builder agent,
+ * long command): proves the run is still alive with its elapsed time.
+ */
+export function formatToolStillRunning(label: string, elapsedMs: number): string {
+  const lowered = label.charAt(0).toLowerCase() + label.slice(1);
+  return `Still ${lowered}… (${Math.max(0, Math.floor(elapsedMs / 1000))}s)`;
+}
+
 /** One-line JSON summary of a tool input for the confirmation dialog. */
 export function summarizeToolInput(input: unknown, maxChars: number): string {
   let rendered: string;
