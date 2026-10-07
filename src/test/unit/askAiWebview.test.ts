@@ -209,4 +209,56 @@ suite('askAiWebview', () => {
     assert.ok(bubble.html.includes('Hello.'), 'first chunk kept');
     assert.ok(bubble.html.includes('There.'), 'second chunk kept');
   });
+
+  test('confirm card shows the explanation before the command block', () => {
+    const panel = loadPanel();
+    panel.postMessage({
+      command: 'transcript',
+      sessionId: 's1',
+      messages: [{ role: 'user', text: 'hi' }],
+      busy: true
+    });
+    panel.postMessage({
+      command: 'confirm',
+      sessionId: 's1',
+      id: 'confirm-1',
+      title: 'Run this command?',
+      detail: 'dir',
+      explanation: 'List files'
+    });
+
+    const card = panel.conversation.children[1];
+    assert.strictEqual(card.className, 'message confirm');
+    assert.deepStrictEqual(
+      card.children.map((child) => child.className),
+      ['confirm-title', 'confirm-explanation', '', 'confirm-actions']
+    );
+    assert.strictEqual(card.children[1].textContent, 'List files');
+    assert.strictEqual(card.children[2].textContent, 'dir');
+  });
+
+  test('confirm card without explanation only shows the command block', () => {
+    const panel = loadPanel();
+    panel.postMessage({
+      command: 'transcript',
+      sessionId: 's1',
+      messages: [{ role: 'user', text: 'hi' }],
+      busy: true
+    });
+    panel.postMessage({
+      command: 'confirm',
+      sessionId: 's1',
+      id: 'confirm-1',
+      title: 'Run this command?',
+      detail: 'dir'
+    });
+
+    const card = panel.conversation.children[1];
+    assert.strictEqual(card.className, 'message confirm');
+    assert.deepStrictEqual(
+      card.children.map((child) => child.className),
+      ['confirm-title', '', 'confirm-actions']
+    );
+    assert.strictEqual(card.children[1].textContent, 'dir');
+  });
 });

@@ -51,6 +51,7 @@ export function needsConfirmation(toolName: string, confirmList: readonly string
 export interface ToolCallDescription {
   title: string;
   detail: string;
+  explanation?: string;
 }
 
 function stringField(input: unknown, names: readonly string[]): string | undefined {
@@ -87,8 +88,8 @@ function truncateDetail(text: string, maxChars: number): string {
 
 /**
  * Describe a gated tool call for the in-chat confirmation card. Terminal
- * tools show the command plus the model's explanation (the popup summary,
- * without the popup); the skill runner shows the skill and its arguments,
+ * tools show the command with the model's explanation split out (shown first,
+ * outside the command block); the skill runner shows the skill and its arguments,
  * the skill factory the new skill and its task; anything else falls back
  * to the tool name with a JSON summary.
  */
@@ -101,8 +102,12 @@ export function describeToolCall(
     const command = stringField(input, ['command', 'text', 'value']);
     if (command) {
       const explanation = stringField(input, ['explanation', 'goal']);
-      const detail = explanation ? `${command}\n${explanation}` : command;
-      return { title: 'Run this command?', detail: truncateDetail(detail, maxChars) };
+      const detail = truncateDetail(command, maxChars);
+      return {
+        title: 'Run this command?',
+        detail,
+        ...(explanation ? { explanation: truncateDetail(explanation, maxChars) } : {})
+      };
     }
   }
   if (toolName === 'froggyRunSkill') {

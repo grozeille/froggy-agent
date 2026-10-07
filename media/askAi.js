@@ -98,7 +98,7 @@
       renderAssistant(assistantEl, assistantRaw);
       scrollToBottom();
     } else if (message.command === 'confirm') {
-      appendConfirm(message.id, message.title, message.detail);
+      appendConfirm(message.id, message.title, message.detail, message.explanation);
     } else if (message.command === 'question') {
       appendQuestion(message.id, message.questions);
     } else if (message.command === 'actionLog') {
@@ -132,7 +132,7 @@
     return div;
   }
 
-  function appendConfirm(id, title, detail) {
+  function appendConfirm(id, title, detail, explanation) {
     const div = document.createElement('div');
     div.className = 'message confirm';
     const label = document.createElement('div');
@@ -159,6 +159,12 @@
     row.appendChild(ok);
     row.appendChild(ko);
     div.appendChild(label);
+    if (explanation) {
+      const expl = document.createElement('div');
+      expl.className = 'confirm-explanation';
+      expl.textContent = explanation;
+      div.appendChild(expl);
+    }
     if (detail) {
       div.appendChild(code);
     }

@@ -84,10 +84,10 @@ suite('toolSelection', () => {
     assert.strictEqual(needsConfirmation('run_in_terminal', []), false);
   });
 
-  test('describeToolCall shows the command plus its explanation', () => {
+  test('describeToolCall splits the command from its explanation', () => {
     assert.deepStrictEqual(
       describeToolCall('froggyRunTerminal', { command: 'dir', explanation: 'List files' }, 300),
-      { title: 'Run this command?', detail: 'dir\nList files' }
+      { title: 'Run this command?', detail: 'dir', explanation: 'List files' }
     );
     assert.deepStrictEqual(
       describeToolCall('run_in_terminal', { command: 'dir' }, 300),
@@ -127,6 +127,26 @@ suite('toolSelection', () => {
     const description = describeToolCall('froggyRunTerminal', { command: 'x'.repeat(500) }, 50);
     assert.ok(description.detail.includes('…(truncated)'));
     assert.ok(description.detail.length <= 50 + '…(truncated)'.length + 1);
+  });
+
+  test('describeToolCall keeps a long command from swallowing its explanation', () => {
+    const description = describeToolCall(
+      'froggyRunTerminal',
+      { command: 'x'.repeat(500), explanation: 'List files' },
+      50
+    );
+    assert.ok(description.detail.includes('…(truncated)'));
+    assert.strictEqual(description.explanation, 'List files');
+  });
+
+  test('describeToolCall truncates a long explanation on its own', () => {
+    const description = describeToolCall(
+      'froggyRunTerminal',
+      { command: 'dir', explanation: 'y'.repeat(500) },
+      50
+    );
+    assert.strictEqual(description.detail, 'dir');
+    assert.ok(description.explanation?.includes('…(truncated)'));
   });
 
   test('dropSupersededTerminalTools drops externals when the builtin is resolved', () => {
