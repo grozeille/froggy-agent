@@ -32,6 +32,16 @@ function renderBlocks(lines) {
       if (i < lines.length) {
         i++;
       }
+      // Chart blocks render as inline SVG when charts.js is loaded and the
+      // JSON is valid; partial JSON mid-stream falls back to a code block.
+      if (/^(chart|froggy-chart)$/i.test(fence[2] || '')) {
+        var chart =
+          typeof renderChartBlock === 'function' ? renderChartBlock(code.join('\n')) : null;
+        if (chart !== null && chart !== undefined) {
+          html += chart;
+          continue;
+        }
+      }
       var cls = fence[2] ? ' class="language-' + fence[2] + '"' : '';
       html += '<pre><code' + cls + '>' + escapeHtml(code.join('\n')) + '</code></pre>';
       continue;

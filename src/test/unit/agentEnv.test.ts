@@ -1,5 +1,5 @@
 import * as assert from 'assert';
-import { agentEnvironmentPreamble, clarificationHint, historyGroundingHint, terminalToolHint, webSearchHint } from '../../agentEnv';
+import { agentEnvironmentPreamble, chartHint, clarificationHint, historyGroundingHint, terminalToolHint, webSearchHint } from '../../agentEnv';
 
 suite('agentEnv', () => {
   test('tells the model Windows with Windows-only commands', () => {
@@ -66,5 +66,18 @@ suite('agentEnv', () => {
     assert.strictEqual(webSearchHint(['froggyDateTime']), '');
     assert.strictEqual(webSearchHint(['froggyFetchWebPage']), '');
     assert.strictEqual(webSearchHint([]), '');
+  });
+  test('chartHint tells the model the chart format and type choice', () => {
+    const hint = chartHint();
+    assert.match(hint, /CAN display charts/);
+    assert.match(hint, /```chart/);
+    assert.match(hint, /"datasets"/);
+    assert.match(hint, /line for trends/);
+    assert.match(hint, /area to/);
+    assert.match(hint, /pie for/);
+    assert.match(hint, /bar otherwise/);
+    assert.match(hint, /reference/);
+    assert.match(hint, /Never say you cannot draw charts/);
+    assert.match(hint, /No chart when/);
   });
 });

@@ -102,7 +102,7 @@ interface FakePanel {
 }
 
 // The panel is a plain webview script: load the real shipped files in a VM,
-// markdown renderer first like the panel HTML does.
+// charts, markdown, panel then hover, like the panel HTML does.
 function loadPanel(): FakePanel {
   const mediaDir = path.join(__dirname, '..', '..', '..', 'media');
   const conversation = new FakeElement('div');
@@ -124,7 +124,8 @@ function loadPanel(): FakePanel {
     document: {
       getElementById: (id: string): FakeElement | null => byId[id] ?? null,
       createElement: (tag: string): FakeElement => new FakeElement(tag),
-      querySelector: (): FakeElement | null => null
+      querySelector: (): FakeElement | null => null,
+      addEventListener: (): void => undefined
     },
     window: {
       addEventListener: (
@@ -138,8 +139,10 @@ function loadPanel(): FakePanel {
     }
   };
   vm.createContext(sandbox);
+  vm.runInContext(fs.readFileSync(path.join(mediaDir, 'charts.js'), 'utf8'), sandbox);
   vm.runInContext(fs.readFileSync(path.join(mediaDir, 'markdown.js'), 'utf8'), sandbox);
   vm.runInContext(fs.readFileSync(path.join(mediaDir, 'askAi.js'), 'utf8'), sandbox);
+  vm.runInContext(fs.readFileSync(path.join(mediaDir, 'chartInteract.js'), 'utf8'), sandbox);
   assert.ok(messageListener, 'panel registers a message listener');
   return {
     conversation,
@@ -208,5 +211,24 @@ suite('askAiWebview', () => {
     const bubble = panel.conversation.children[1];
     assert.ok(bubble.html.includes('Hello.'), 'first chunk kept');
     assert.ok(bubble.html.includes('There.'), 'second chunk kept');
+  });
+
+  test('assistant chart blocks render as inline SVG in the bubble', () => {
+    const panel = loadPanel();
+    panel.postMessage({
+      command: 'transcript',
+      sessionId: 's1',
+      messages: [
+        {
+          role: 'assistant',
+          text: 'Top RAM:\n```chart\n{"type":"bar","labels":["a","b"],"datasets":[{"label":"MB","data":[10,20]}]}\n```'
+        }
+      ],
+      busy: false
+    });
+    const bubble = panel.conversation.children[0];
+    assert.ok(bubble.html.includes('Top RAM:'), 'text kept');
+    assert.ok(bubble.html.includes('<figure class="md-chart"'), 'chart figure rendered');
+    assert.ok(bubble.html.includes('<svg'), 'chart renders as SVG');
   });
 });

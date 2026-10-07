@@ -335,6 +335,174 @@ h1 {
   color: var(--vscode-textLink-foreground);
 }
 
+/* Charts take maximum space: the panel widens when one is visible and the
+   bubble stretches full width. Text bubbles are unaffected (fit-content). */
+main:has(figure.md-chart) {
+  max-width: 1200px;
+}
+
+.message.assistant:has(figure.md-chart) {
+  align-self: stretch;
+  max-width: 100%;
+}
+
+.message.assistant figure.md-chart {
+  margin: 8px 0;
+  position: relative;
+}
+
+.md-chart-tip {
+  position: absolute;
+  display: none;
+  z-index: 5;
+  max-width: 240px;
+  padding: 6px 9px;
+  font-size: 12px;
+  color: var(--vscode-foreground);
+  background: var(--vscode-editorHoverWidget-background, var(--vscode-editor-background));
+  border: 1px solid var(--vscode-editorHoverWidget-border, var(--vscode-panel-border));
+  border-radius: 6px;
+  box-shadow: 0 2px 8px var(--vscode-widget-shadow, rgba(0, 0, 0, 0.25));
+  pointer-events: none;
+}
+
+.md-chart-tip.show {
+  display: block;
+}
+
+.md-chart-tip-label {
+  font-weight: 600;
+  margin-bottom: 3px;
+  white-space: nowrap;
+}
+
+.md-chart-tip-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.md-chart-tip-row + .md-chart-tip-row {
+  margin-top: 2px;
+}
+
+.md-chart-tip-val {
+  margin-left: 8px;
+  font-variant-numeric: tabular-nums;
+}
+
+.md-chart-guide {
+  stroke: var(--vscode-descriptionForeground);
+  stroke-width: 1;
+  opacity: 0.6;
+}
+
+.md-chart-focus {
+  stroke: var(--vscode-editor-background);
+  stroke-width: 2;
+}
+
+.md-chart-bar-hot {
+  stroke: var(--vscode-focusBorder);
+  stroke-width: 2;
+}
+
+.message.assistant figure.md-chart svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.md-chart-title {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.md-chart svg text {
+  font-family: inherit;
+  font-size: 11px;
+  fill: var(--vscode-descriptionForeground);
+}
+
+.md-chart-grid {
+  stroke: var(--vscode-panel-border);
+  stroke-width: 1;
+  stroke-dasharray: 2 5;
+  stroke-linecap: round;
+}
+
+.md-chart-line {
+  fill: none;
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.md-chart-hit {
+  fill: transparent;
+  stroke: none;
+}
+
+.md-chart-ref {
+  stroke: var(--vscode-descriptionForeground);
+  stroke-width: 1;
+  stroke-dasharray: 5 4;
+}
+.md-chart-ref-bg {
+  fill: var(--vscode-editor-background);
+}
+
+.md-chart-c0 { fill: var(--vscode-charts-blue, #3794ff); }
+.md-chart-c1 { fill: var(--vscode-charts-orange, #d18616); }
+.md-chart-c2 { fill: var(--vscode-charts-green, #388a34); }
+.md-chart-c3 { fill: var(--vscode-charts-red, #e51400); }
+.md-chart-c4 { fill: var(--vscode-charts-yellow, #e9c510); }
+.md-chart-c5 { fill: var(--vscode-charts-purple, #652d90); }
+
+.md-chart-s0 { stroke: var(--vscode-charts-blue, #3794ff); }
+.md-chart-s1 { stroke: var(--vscode-charts-orange, #d18616); }
+.md-chart-s2 { stroke: var(--vscode-charts-green, #388a34); }
+.md-chart-s3 { stroke: var(--vscode-charts-red, #e51400); }
+.md-chart-s4 { stroke: var(--vscode-charts-yellow, #e9c510); }
+.md-chart-s5 { stroke: var(--vscode-charts-purple, #652d90); }
+
+.md-chart-b0 { background-color: var(--vscode-charts-blue, #3794ff); }
+.md-chart-b1 { background-color: var(--vscode-charts-orange, #d18616); }
+.md-chart-b2 { background-color: var(--vscode-charts-green, #388a34); }
+.md-chart-b3 { background-color: var(--vscode-charts-red, #e51400); }
+.md-chart-b4 { background-color: var(--vscode-charts-yellow, #e9c510); }
+.md-chart-b5 { background-color: var(--vscode-charts-purple, #652d90); }
+
+.md-chart-g0 { stop-color: var(--vscode-charts-blue, #3794ff); }
+.md-chart-g1 { stop-color: var(--vscode-charts-orange, #d18616); }
+.md-chart-g2 { stop-color: var(--vscode-charts-green, #388a34); }
+.md-chart-g3 { stop-color: var(--vscode-charts-red, #e51400); }
+.md-chart-g4 { stop-color: var(--vscode-charts-yellow, #e9c510); }
+.md-chart-g5 { stop-color: var(--vscode-charts-purple, #652d90); }
+
+.md-chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin-top: 6px;
+  font-size: 0.9em;
+  color: var(--vscode-descriptionForeground);
+}
+
+.md-chart-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.md-chart-swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+
 .status {
   margin: 4px 0 8px;
   color: var(--vscode-descriptionForeground);
