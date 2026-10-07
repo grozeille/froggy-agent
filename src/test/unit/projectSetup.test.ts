@@ -14,6 +14,7 @@ import {
   MEMORY_SEED_CONTENT,
   SETUP_COMMAND_ID,
   SETUP_GITIGNORE_ENTRIES,
+  SETUP_PROMPT_MESSAGE,
   VSCODE_SETTINGS_PATH,
   buildSettingsContent,
   formatSetupSummary,
@@ -202,6 +203,10 @@ suite('projectSetup', () => {
     ]) {
       assert.strictEqual(shouldPromptProjectSetup(markers), false, JSON.stringify(markers));
     }
+  });
+
+  test('setup prompt advertises the editable agent identity', () => {
+    assert.match(SETUP_PROMPT_MESSAGE, /editable agent identity/);
   });
 
   test('summary reports created pieces plus the python note', () => {

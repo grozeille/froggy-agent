@@ -16,7 +16,8 @@ export const SETUP_DISMISSED_KEY = 'froggy-agent.setupDismissed';
 /** Offer text shown when the extension activates on a folder without markers. */
 export const SETUP_PROMPT_MESSAGE =
   'This folder is not a Froggy Agent project yet. ' +
-  'Set it up with memory.md, a data folder and the built-in skills?';
+  'Set it up with memory.md, a data folder, an editable agent identity ' +
+  'and the built-in skills?';
 export const SETUP_PROMPT_ACTION = 'Setup Project';
 export const SETUP_DISMISS_ACTION = 'Not now';
 
