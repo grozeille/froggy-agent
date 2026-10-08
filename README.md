@@ -126,8 +126,9 @@ task, the main chat delegates to a dedicated Python-developer sub-agent
 (`#createSkill`, confirmation-gated like the other writers): it ensures the
 workspace Python (alerts when Python is missing, creates `.venv` when absent
 and ignores it via `.gitignore`), writes `.github/skills/<name>/SKILL.md` plus
-`run.py` (command-line script, standard library only), syntax-checks the
-script, and hands the new skill back —
+`run.py` (command-line script, standard library only), dry-runs the script
+in a staging folder (`run.py --help` must exit 0, fixed over up to 3
+write→run→fix attempts), and hands the new skill back —
 immediately runnable via `#runSkill`. The name is derived from the task when
 omitted, and existing skills are never overwritten. Tasks describe the goal,
 never an implementation: the factory always builds Python. Third-party
@@ -256,6 +257,8 @@ Extension -> webview (each message carries its `sessionId`):
   tool (`#runSkill`), runs `.github/skills/<name>/run.py` with the project
   `.venv` or PATH `python`, plus the per-request runnable-skill catalog hint
   (unit-tested)
+- `src/skillExec.ts` — shared Python execution (script runs, pip installs,
+  syntax checks) for the skill runner and the factory dry-run
 - `src/defaultSkills.ts` — built-in skill templates embedded in the
   extension (`browser-search`, `count-words`, `skill-factory`), written by
   project setup (unit-tested)
@@ -264,8 +267,8 @@ Extension -> webview (each message carries its `sessionId`):
   `Setup Project` command (unit-tested)
 - `src/skillCreateTool.ts` + `src/skillCreate.ts` — `froggyCreateSkill` language
   model tool (`#createSkill`), skill factory: a Python-dev sub-agent builds
-  `.github/skills/<name>/SKILL.md` + `run.py`, syntax-checked before saving
-  (unit-tested)
+  `.github/skills/<name>/SKILL.md` + `run.py`, dry-run in a staging folder
+  (write→run→fix loop) before saving (unit-tested)
 - `src/pythonEnv.ts` — workspace Python probe, `.venv` creation,
   `.gitignore` update and requirements fingerprint (unit-tested)
 - `src/pythonEnvSetup.ts` — shared Python ensure (probe, `.venv`,
