@@ -10,7 +10,10 @@ import {
   resolveAgentTools,
   summarizeToolInput,
   TOOL_SETTING_DEFAULT,
-  TOOL_SETTING_KEY
+  TOOL_SETTING_KEY,
+  formatToolRunning,
+  formatToolStillRunning,
+  toolRunLabel
 } from '../../toolSelection';
 
 interface ToolsSettingDef {
@@ -81,10 +84,10 @@ suite('toolSelection', () => {
     assert.strictEqual(needsConfirmation('run_in_terminal', []), false);
   });
 
-  test('describeToolCall shows the command plus its explanation', () => {
+  test('describeToolCall splits the command from its explanation', () => {
     assert.deepStrictEqual(
       describeToolCall('froggyRunTerminal', { command: 'dir', explanation: 'List files' }, 300),
-      { title: 'Run this command?', detail: 'dir\nList files' }
+      { title: 'Run this command?', detail: 'dir', explanation: 'List files' }
     );
     assert.deepStrictEqual(
       describeToolCall('run_in_terminal', { command: 'dir' }, 300),
@@ -124,6 +127,26 @@ suite('toolSelection', () => {
     const description = describeToolCall('froggyRunTerminal', { command: 'x'.repeat(500) }, 50);
     assert.ok(description.detail.includes('…(truncated)'));
     assert.ok(description.detail.length <= 50 + '…(truncated)'.length + 1);
+  });
+
+  test('describeToolCall keeps a long command from swallowing its explanation', () => {
+    const description = describeToolCall(
+      'froggyRunTerminal',
+      { command: 'x'.repeat(500), explanation: 'List files' },
+      50
+    );
+    assert.ok(description.detail.includes('…(truncated)'));
+    assert.strictEqual(description.explanation, 'List files');
+  });
+
+  test('describeToolCall truncates a long explanation on its own', () => {
+    const description = describeToolCall(
+      'froggyRunTerminal',
+      { command: 'dir', explanation: 'y'.repeat(500) },
+      50
+    );
+    assert.strictEqual(description.detail, 'dir');
+    assert.ok(description.explanation?.includes('…(truncated)'));
   });
 
   test('dropSupersededTerminalTools drops externals when the builtin is resolved', () => {
@@ -169,6 +192,37 @@ suite('toolSelection', () => {
     assert.strictEqual(TOOL_SETTING_KEY, 'tools');
     assert.deepStrictEqual(readToolsSetting()?.default, [...TOOL_SETTING_DEFAULT]);
     assert.deepStrictEqual([...TOOL_SETTING_DEFAULT], []);
+  });
+
+  test('toolRunLabel names builtin runs in plain words', () => {
+    assert.strictEqual(toolRunLabel('froggyCreateSkill'), 'Building the skill');
+    assert.strictEqual(toolRunLabel('froggyRunSkill'), 'Running the skill');
+    assert.strictEqual(toolRunLabel('froggyRunTerminal'), 'Running the command');
+    assert.strictEqual(toolRunLabel('run_in_terminal'), 'Running the command');
+    assert.strictEqual(toolRunLabel('froggyBrowseState'), 'Reading the watched browser');
+    assert.strictEqual(toolRunLabel('froggyWebSearch'), 'Searching the web');
+    assert.strictEqual(toolRunLabel('froggyDateTime'), 'Reading the date');
+    assert.strictEqual(toolRunLabel('froggyRefreshFiles'), 'Refreshing the Files view');
+  });
+
+  test('toolRunLabel falls back to the raw name for external tools', () => {
+    assert.strictEqual(toolRunLabel('mysteryTool'), 'Running mysteryTool');
+  });
+
+  test('tool running status shows the start and the still-running heartbeat', () => {
+    assert.strictEqual(formatToolRunning('Building the skill'), 'Building the skill…');
+    assert.strictEqual(
+      formatToolStillRunning('Building the skill', 15000),
+      'Still building the skill… (15s)'
+    );
+    assert.strictEqual(
+      formatToolStillRunning('Running the command', 1499),
+      'Still running the command… (1s)'
+    );
+    assert.strictEqual(
+      formatToolStillRunning('Running the command', -5),
+      'Still running the command… (0s)'
+    );
   });
 
   test('package.json contributes the confirmTools setting default', () => {

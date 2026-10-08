@@ -1,33 +1,35 @@
-import { execFile } from 'child_process';
-import { promisify } from 'util';
+import * as os from 'os';
 import * as vscode from 'vscode';
 import { MODEL_SETTING_DEFAULT, MODEL_SETTING_KEY, pickChatModel } from './modelSelection';
 import {
-  buildSkillBuilderPrompt,
   CREATE_SKILL_TOOL_NAME,
   ensureSkillMdFrontmatter,
   formatCreatedSkillSummary,
-  parseBuilderOutput,
   resolveNewSkillName,
   resolveTask,
+  runSkillBuildLoop,
+  SKILL_DRY_RUN_ARGS,
   SKILL_MD_NAME,
   skillDescriptionFromTask,
   suggestSkillName,
-  validateBuiltSkillFiles,
-  type CreateSkillToolInput
+  type BuiltSkillFiles,
+  type CreateSkillToolInput,
+  type SkillDryRunResult
 } from './skillCreate';
+import {
+  checkPythonSyntax,
+  installSkillRequirements,
+  isPythonNotFoundError,
+  runPythonScript
+} from './skillExec';
 import { ensureWorkspacePython } from './pythonEnvSetup';
 import { extractSkillDescription } from './skills';
 import {
   RUN_SKILL_TOOL_NAME,
   SKILL_SCRIPT_NAME,
-  SKILL_TIMEOUT_MS,
   SKILLS_DIR_NAME,
-  truncateOutput,
   REQUIREMENTS_FILE_NAME
 } from './skillRun';
-
-const execFileAsync = promisify(execFile);
 
 async function exists(uri: vscode.Uri): Promise<boolean> {
   try {
@@ -40,11 +42,14 @@ async function exists(uri: vscode.Uri): Promise<boolean> {
 
 /**
  * Skill factory: ensures the workspace Python (alerting when none exists,
- * creating `.venv` when absent), delegates the build to a dedicated
- * Python-developer sub-agent (a separate model call with a builder-only
- * prompt, no tools), writes its SKILL.md + run.py to
- * `.github/skills/<name>/`, syntax-checks the script, and hands a summary
- * back to the main chat.
+ * creating `.venv` when absent), then runs a write→run→fix loop with a
+ * dedicated Python-developer sub-agent (one model call per attempt, no
+ * tools): each attempt is written to a staging folder in the OS temp dir,
+ * syntax-checked and dry-run (`run.py --help` must exit 0), and on failure
+ * the traceback goes back to the builder for a fix. Only a green attempt is
+ * promoted to `.github/skills/<name>/`, and a summary goes back to the main
+ * chat. Attempts stay invisible: only the executed commands and the final
+ * outcome reach the action log.
  */
 export class CreateSkillTool implements vscode.LanguageModelTool<CreateSkillToolInput> {
   private readonly _onDidCreateSkill?: () => void;
@@ -94,77 +99,95 @@ export class CreateSkillTool implements vscode.LanguageModelTool<CreateSkillTool
       );
     }
     const { python, envNote } = await ensureWorkspacePython(root);
-    const files = parseBuilderOutput(await this._runBuilder(task, skillName, token));
-    if (!files) {
-      throw new Error(
-        'The skill builder did not return usable files. Rephrase the task and try again.'
-      );
-    }
-    const fileError = validateBuiltSkillFiles(files);
-    if (fileError) {
-      throw new Error(fileError);
-    }
-    const description = skillDescriptionFromTask(task);
-    const skillMd = ensureSkillMdFrontmatter(files.skillMd, skillName, description);
-    await vscode.workspace.fs.createDirectory(skillDir);
+    const model = await this._selectBuilderModel();
+    const staging = await this._createStagingDir(skillName);
     try {
-      const encoder = new TextEncoder();
-      await vscode.workspace.fs.writeFile(
-        vscode.Uri.joinPath(skillDir, SKILL_MD_NAME),
-        encoder.encode(skillMd)
-      );
-      await vscode.workspace.fs.writeFile(
-        vscode.Uri.joinPath(skillDir, SKILL_SCRIPT_NAME),
-        encoder.encode(files.script)
-      );
-      if (files.requirements !== undefined) {
-        await vscode.workspace.fs.writeFile(
-          vscode.Uri.joinPath(skillDir, REQUIREMENTS_FILE_NAME),
-          encoder.encode(files.requirements)
+      const { files, attempts } = await runSkillBuildLoop(task, skillName, {
+        build: (prompt) => this._runBuilder(model, prompt, token),
+        dryRun: (built) => this._dryRun(root, staging, python, built),
+        throwIfCancelled: () => {
+          if (token.isCancellationRequested) {
+            throw new vscode.CancellationError();
+          }
+        }
+      });
+      if (await exists(skillDir)) {
+        throw new Error(
+          `Skill "${skillName}" already exists. Pick another name or delete .github/skills/${skillName} first.`
         );
       }
-      await this._checkSyntax(root, skillDir, python);
-    } catch (err) {
-      // Leave no half-built skill behind: a retry starts from a clean folder.
+      const description = skillDescriptionFromTask(task);
+      const skillMd = ensureSkillMdFrontmatter(files.skillMd, skillName, description);
+      await vscode.workspace.fs.createDirectory(skillDir);
       try {
-        await vscode.workspace.fs.delete(skillDir, { recursive: true });
-      } catch {
-        // Keep the original error: the cleanup is best-effort.
+        const encoder = new TextEncoder();
+        await vscode.workspace.fs.writeFile(
+          vscode.Uri.joinPath(skillDir, SKILL_MD_NAME),
+          encoder.encode(skillMd)
+        );
+        await vscode.workspace.fs.writeFile(
+          vscode.Uri.joinPath(skillDir, SKILL_SCRIPT_NAME),
+          encoder.encode(files.script)
+        );
+        if (files.requirements !== undefined) {
+          await vscode.workspace.fs.writeFile(
+            vscode.Uri.joinPath(skillDir, REQUIREMENTS_FILE_NAME),
+            encoder.encode(files.requirements)
+          );
+        }
+      } catch (err) {
+        // Leave no half-built skill behind: a retry starts from a clean folder.
+        try {
+          await vscode.workspace.fs.delete(skillDir, { recursive: true });
+        } catch {
+          // Keep the original error: the cleanup is best-effort.
+        }
+        throw err;
       }
-      throw err;
-    }
-    // The skill is on disk and checked: force the Skills view to refresh so
-    // the new skill shows up without waiting for the file watcher.
-    this._onDidCreateSkill?.();
-    return new vscode.LanguageModelToolResult([
-      new vscode.LanguageModelTextPart(
-        formatCreatedSkillSummary(
-          skillName,
-          extractSkillDescription(skillMd, description),
-          RUN_SKILL_TOOL_NAME,
-          envNote,
-          files.requirements !== undefined
+      // The skill is on disk and checked: force the Skills view to refresh so
+      // the new skill shows up without waiting for the file watcher.
+      this._onDidCreateSkill?.();
+      return new vscode.LanguageModelToolResult([
+        new vscode.LanguageModelTextPart(
+          formatCreatedSkillSummary(
+            skillName,
+            extractSkillDescription(skillMd, description),
+            RUN_SKILL_TOOL_NAME,
+            envNote,
+            files.requirements !== undefined,
+            attempts
+          )
         )
-      )
-    ]);
+      ]);
+    } finally {
+      try {
+        await vscode.workspace.fs.delete(staging, { recursive: true });
+      } catch {
+        // Staging lives in the OS temp dir: leftovers age out on their own.
+      }
+    }
   }
 
-  /**
-   * Dedicated Python-dev sub-agent: one model call with the builder prompt and
-   * no tools, so file contents come back as plain text between markers.
-   */
-  private async _runBuilder(
-    task: string,
-    skillName: string,
-    token: vscode.CancellationToken
-  ): Promise<string> {
+  private async _selectBuilderModel(): Promise<vscode.LanguageModelChat> {
     const models = await vscode.lm.selectChatModels();
     const setting = vscode.workspace
       .getConfiguration('froggy-agent')
       .get<string>(MODEL_SETTING_KEY, MODEL_SETTING_DEFAULT);
-    const model = pickChatModel(models, setting);
+    return pickChatModel(models, setting);
+  }
+
+  /**
+   * Dedicated Python-dev sub-agent: one model call with the given prompt and
+   * no tools, so file contents come back as plain text between markers. The
+   * loop calls it once per attempt (initial prompt, then fix prompts).
+   */
+  private async _runBuilder(
+    model: vscode.LanguageModelChat,
+    prompt: string,
+    token: vscode.CancellationToken
+  ): Promise<string> {
     const response = await model.sendRequest(
-      [vscode.LanguageModelChatMessage.User(buildSkillBuilderPrompt(task, skillName))],
+      [vscode.LanguageModelChatMessage.User(prompt)],
       {},
       token
     );
@@ -177,43 +200,85 @@ export class CreateSkillTool implements vscode.LanguageModelTool<CreateSkillTool
         text += part.value;
       }
     }
+    if (token.isCancellationRequested) {
+      throw new vscode.CancellationError();
+    }
     if (!text.trim()) {
       throw new Error('The skill builder returned an empty answer. Try again.');
     }
     return text;
   }
 
-  /** Compile-check the generated script with the ensured interpreter. */
-  private async _checkSyntax(
+  /**
+   * Fresh staging folder in the OS temp dir: attempts are written and
+   * dry-run here, promoted to `.github/skills/<name>/` only once green.
+   * Outside the workspace so watchers and the skills view never see it.
+   */
+  private async _createStagingDir(skillName: string): Promise<vscode.Uri> {
+    const staging = vscode.Uri.joinPath(
+      vscode.Uri.file(os.tmpdir()),
+      `froggy-skill-${skillName}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+    );
+    await vscode.workspace.fs.createDirectory(staging);
+    return staging;
+  }
+
+  /**
+   * One dry-run: stage the attempt (overwriting the previous one),
+   * syntax-check it, install its requirements into the workspace `.venv`
+   * when any, and run `run.py --help` with the runner sandboxing. Script
+   * failures come back as `{ ok: false }` for the fix loop; only staging
+   * writes throw, failing the build outright.
+   */
+  private async _dryRun(
     root: vscode.Uri,
-    skillDir: vscode.Uri,
-    python: string
-  ): Promise<void> {
-    const script = vscode.Uri.joinPath(skillDir, SKILL_SCRIPT_NAME);
-    try {
-      await execFileAsync(python, ['-m', 'py_compile', script.fsPath], {
-        cwd: root.fsPath,
-        timeout: SKILL_TIMEOUT_MS,
-        windowsHide: true
-      });
-    } catch (err) {
-      const code = (err as { code?: unknown }).code;
-      if (code === 'ENOENT') {
-        throw new Error(
-          'Python was not found. Install Python 3 on PATH or add a .venv to the workspace.'
-        );
+    staging: vscode.Uri,
+    python: string,
+    files: BuiltSkillFiles
+  ): Promise<SkillDryRunResult> {
+    const encoder = new TextEncoder();
+    const script = vscode.Uri.joinPath(staging, SKILL_SCRIPT_NAME);
+    await vscode.workspace.fs.writeFile(script, encoder.encode(files.script));
+    const requirements = vscode.Uri.joinPath(staging, REQUIREMENTS_FILE_NAME);
+    if (files.requirements !== undefined) {
+      await vscode.workspace.fs.writeFile(requirements, encoder.encode(files.requirements));
+    } else {
+      // A previous attempt may have left one behind in the shared staging dir.
+      try {
+        await vscode.workspace.fs.delete(requirements);
+      } catch {
+        // Missing already: nothing to clean.
       }
-      if (code === 'ETIMEDOUT') {
-        throw new Error(`Skill check timed out after ${SKILL_TIMEOUT_MS / 1000}s.`);
-      }
-      const detail = [(err as { stdout?: unknown }).stdout, (err as { stderr?: unknown }).stderr]
-        .filter((text): text is string => typeof text === 'string' && text.trim().length > 0)
-        .join('\n');
-      throw new Error(
-        `The generated script has a syntax error.` +
-          `${detail ? `\n${truncateOutput(detail, 2000)}` : ''} Rephrase the task and try again.`
-      );
     }
+    try {
+      await checkPythonSyntax(python, script.fsPath, root.fsPath);
+    } catch (err) {
+      return this._dryRunFailure('syntax', err);
+    }
+    if (files.requirements !== undefined) {
+      try {
+        await installSkillRequirements(python, staging.fsPath);
+      } catch (err) {
+        return this._dryRunFailure('requirements', err);
+      }
+    }
+    try {
+      await runPythonScript(python, script.fsPath, [...SKILL_DRY_RUN_ARGS], root.fsPath);
+      return { ok: true };
+    } catch (err) {
+      return this._dryRunFailure('dry-run', err);
+    }
+  }
+
+  private _dryRunFailure(
+    stage: 'syntax' | 'requirements' | 'dry-run',
+    err: unknown
+  ): SkillDryRunResult {
+    const detail = err instanceof Error ? err.message : String(err);
+    if (isPythonNotFoundError(err)) {
+      return { ok: false, stage, detail, retryable: false };
+    }
+    return { ok: false, stage, detail, retryable: true };
   }
 }
 

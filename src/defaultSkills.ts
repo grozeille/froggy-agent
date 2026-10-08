@@ -131,8 +131,9 @@ guide plus a command-line \`run.py\` script.
 3. The agent ensures the workspace Python (alerting when Python is missing,
    creating \`.venv\` when absent and ignoring it via \`.gitignore\`), writes
    \`.github/skills/<name>/SKILL.md\` plus \`run.py\` (standard library preferred,
-   third-party packages declared in \`requirements.txt\`), syntax-checks the
-   script, and hands the new skill back.
+   third-party packages declared in \`requirements.txt\`), dry-runs the
+   script in a staging folder (fixing it over up to 3 attempts), and hands
+   the new skill back.
 4. Confirm to the user what was created and run it via \`#runSkill\` on request.
 
 ## Rules

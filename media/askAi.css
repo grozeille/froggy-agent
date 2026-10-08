@@ -96,6 +96,10 @@ h1 {
   border: 1px solid var(--vscode-panel-border);
 }
 
+.message.confirm .confirm-explanation {
+  margin-top: 6px;
+}
+
 .message.confirm .confirm-title {
   font-weight: 600;
 }

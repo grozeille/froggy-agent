@@ -1,6 +1,7 @@
 /** Fresh-project setup: scaffold contents and decisions (pure parts). */
 
 import { MODEL_SETTING_DEFAULT } from './modelSelection';
+import { BROWSE_GITIGNORE_ENTRY } from './browseWatch';
 
 /** Command id, must match the contribution in package.json. */
 export const SETUP_COMMAND_ID = 'froggy-agent.setupProject';
@@ -42,7 +43,8 @@ export const MEMORY_SEED_CONTENT = '# Memory\n\n';
 export const SETUP_GITIGNORE_ENTRIES: readonly string[] = [
   '.venv/',
   '__pycache__/',
-  '*.py[cod]'
+  '*.py[cod]',
+  BROWSE_GITIGNORE_ENTRY
 ];
 
 /**
