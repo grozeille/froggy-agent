@@ -91,3 +91,23 @@ export function clarificationHint(): string {
     ' guessing. Do not ask when the answer would not change what you do.'
   );
 }
+/**
+ * Chart nudge, appended to every request: answers that present data also
+ * render the most adapted chart. The panel turns a ```chart fenced block
+ * holding JSON into an inline SVG chart (bar, line, area or pie); anything
+ * else stays a plain code block, so the format must be followed exactly.
+ * States the capability explicitly: otherwise models answer chart requests
+ * from their priors ("I cannot draw charts") instead of using the block.
+ */
+export function chartHint(): string {
+  return (
+    ' You CAN display charts in the chat: when the answer presents data' +
+    ' (numbers, comparisons, trends, shares), also show the most adapted chart' +
+    ' by appending a ```chart fenced block with raw JSON like' +
+    ' {"type":"bar|line|area|pie","title":"...","labels":[...],"datasets":' +
+    '[{"label":"...","data":[...]}]}. Use line for trends over time, area to' +
+    ' emphasize volume over time, pie for shares of a whole (6 or fewer' +
+    ' categories), bar otherwise. Add "reference":{"value":n,"label":"..."} for a dashed benchmark line. Never say you cannot draw charts: this block' +
+    ' renders as a real chart. No chart when the answer shows no data.'
+  );
+}

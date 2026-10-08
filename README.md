@@ -50,7 +50,13 @@ tree view and a central Ask AI panel with two-way message passing.
   a new tab. The model receives the last 20 messages for follow-up context,
   with past tool calls and their results replayed so it does not redo
   previous turns' actions, and responses render as Markdown (bold, code,
-  tables, links). When VS Code lost the focus, a finished answer, a question
+  tables, links, charts). When an answer presents data, the model appends a
+  ```chart fenced block (JSON with type, labels and datasets) and the panel
+  renders it as an inline SVG chart in the bubble: line for trends, area for
+  volume over time, pie for shares of a whole, bar otherwise, with an optional
+  dashed "reference" benchmark line; hovering a chart shows its values
+  in a tooltip. When VS Code lost the focus, a
+  finished answer, a question
   card or a confirmation card also raises a native Windows toast (a VS Code
   notification with an `Open Chat` action where native toasts don't exist).
 - `WebviewPanel` with a strict Content Security Policy (nonce + `cspSource`).
@@ -231,7 +237,7 @@ Extension -> webview (each message carries its `sessionId`):
 - `src/sessions.ts` — session types, titles, the special main chat session and history replay with past tool runs (unit-tested)
 - `src/modelSelection.ts` — picks the chat model from the `model` setting (unit-tested)
 - `src/toolSelection.ts` — resolves builtins + `tools` setting names, friendly confirmation text, external-terminal supersede (unit-tested)
-- `src/agentEnv.ts` — unsaved per-request preamble: OS/shell match + default-to-terminal nudge (unit-tested)
+- `src/agentEnv.ts` — unsaved per-request preamble: OS/shell match + default-to-terminal nudge + chart nudge (unit-tested)
 - `src/agentIdentity.ts` — personal-agent identity block injected first: embedded markdown default, workspace `.github/froggy-identity.md` override (unit-tested)
 - `src/actionLog.ts` — per-session tool-run journal, opened as a text tab (unit-tested)
 - `src/sessionStore.ts` — session persistence in `globalState`
@@ -294,6 +300,9 @@ Extension -> webview (each message carries its `sessionId`):
   file's lines/words/characters; `skill-factory`: build new skills via
   `#createSkill`)
 - `media/askAi.js`, `media/askAi.css` — Ask AI panel script and styles
+- `media/charts.js` — dependency-free chart renderer: ```chart fences render
+  as inline SVG bar/line/area/pie charts (unit-tested)- `media/chartInteract.js` — hover tooltips for charts: crosshair plus
+  nearest-point values (unit-tested)
 - `media/markdown.js` — dependency-free Markdown renderer (unit-tested)
 - `src/urls.ts` — safe external-link gate (unit-tested)
 - `src/test/unit/` — mocha unit tests, `src/test/suite/` — host integration tests

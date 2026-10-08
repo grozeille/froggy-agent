@@ -5,7 +5,7 @@ import {
   stripAnsi,
   type ActionLogEntry
 } from './actionLog';
-import { agentEnvironmentPreamble, clarificationHint, historyGroundingHint, terminalToolHint, webSearchHint } from './agentEnv';
+import { agentEnvironmentPreamble, chartHint, clarificationHint, historyGroundingHint, terminalToolHint, webSearchHint } from './agentEnv';
 import { IDENTITY_FILE_PATH, prependIdentity, selectIdentityContent } from './agentIdentity';
 import {
   isAnswerResultMessage,
@@ -465,7 +465,8 @@ export class AskAiPanel {
       // the skill runner instead of the terminal) + skill-factory nudge
       // (creation requests delegate to the builder agent) +
       // watched-browser observe nudge + files-refresh nudge +
-      // clarify-when-ambiguous nudge + structured-questions nudge (only
+      // clarify-when-ambiguous nudge + chart nudge (data answers also
+      // render the most adapted chart) + structured-questions nudge (only
       // named when offered).
       const offeredNames = tools.map((tool) => tool.name);
       const skillsHint = offeredNames.includes(RUN_SKILL_TOOL_NAME)
@@ -487,6 +488,7 @@ export class AskAiPanel {
           browseWatchHint(offeredNames) +
           refreshFilesHint(offeredNames) +
           clarificationHint() +
+          chartHint() +
           skillsHint +
           createSkillHint +
           askQuestionsHint
@@ -745,6 +747,8 @@ export class AskAiPanel {
   private _getHtmlForWebview(webview: vscode.Webview): string {
     const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'askAi.js'));
     const markdownUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'markdown.js'));
+    const chartsUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'charts.js'));
+    const interactUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'chartInteract.js'));
     const styleUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'askAi.css'));
     const nonce = getNonce();
 
@@ -772,8 +776,10 @@ export class AskAiPanel {
       </div>
     </form>
   </main>
+  <script nonce="${nonce}" src="${chartsUri}"></script>
   <script nonce="${nonce}" src="${markdownUri}"></script>
   <script nonce="${nonce}" src="${scriptUri}"></script>
+  <script nonce="${nonce}" src="${interactUri}"></script>
 </body>
 </html>`;
   }
