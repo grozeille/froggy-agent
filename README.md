@@ -161,6 +161,13 @@ results with their sources; it reads a promising result in full via
 `#fetchWebPage` (public pages only, truncated to 8KB). Plain questions
 never trigger a search — only explicit internet requests do.
 
+Agent identity: every request starts with a personal-agent framing
+(tone, silent tool use, memory discipline, clarify-vs-proceed),
+embedded in the extension. Drop a `.github/froggy-identity.md` file
+in the workspace to replace it with your own (capped at 20KB, read
+fresh on every ask, so edits apply to the next question); Setup
+Project scaffolds an editable copy.
+
 Watched browser: the Simple Browser is opaque to the agent (another
 extension's webview, no URL or DOM access), so "what do you see on my page?"
 is answered from a real external browser driven by Playwright
@@ -179,7 +186,8 @@ accept it.
 Project setup: on a virgin folder (no `memory.md`, `data/` or
 `.github/skills/`) the extension offers to scaffold a project; `Froggy Agent:
 Setup Project` runs it any time. Setup creates `data/`, `memory.md` (bare
-`# Memory` header), the built-in skills (`browser-search`, `count-words`,
+`# Memory` header), an editable agent identity
+(`.github/froggy-identity.md`), the built-in skills (`browser-search`, `count-words`,
 `skill-factory`), `.vscode/settings.json` (`auto` model, builtins-only tools,
 Markdown preview), `.gitignore` entries and the workspace `.venv` — only
 missing pieces are created, existing files are never overwritten. Built-in
@@ -230,6 +238,7 @@ Extension -> webview (each message carries its `sessionId`):
 - `src/modelSelection.ts` — picks the chat model from the `model` setting (unit-tested)
 - `src/toolSelection.ts` — resolves builtins + `tools` setting names, friendly confirmation text, external-terminal supersede (unit-tested)
 - `src/agentEnv.ts` — unsaved per-request preamble: OS/shell match + default-to-terminal nudge + chart nudge (unit-tested)
+- `src/agentIdentity.ts` — personal-agent identity block injected first: embedded markdown default, workspace `.github/froggy-identity.md` override (unit-tested)
 - `src/actionLog.ts` — per-session tool-run journal, opened as a text tab (unit-tested)
 - `src/sessionStore.ts` — session persistence in `globalState`
 - `src/searchTool.ts` + `src/searchUrl.ts` — `froggyGoogleSearch` language model tool

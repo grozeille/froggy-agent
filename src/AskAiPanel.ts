@@ -6,6 +6,7 @@ import {
   type ActionLogEntry
 } from './actionLog';
 import { agentEnvironmentPreamble, chartHint, clarificationHint, historyGroundingHint, terminalToolHint, webSearchHint } from './agentEnv';
+import { IDENTITY_FILE_PATH, prependIdentity, selectIdentityContent } from './agentIdentity';
 import {
   isAnswerResultMessage,
   isAskAiMessage,
@@ -84,6 +85,27 @@ import {
   type ChatSession,
   type ChatToolRun
 } from './sessions';
+
+/**
+ * Workspace identity override (`.github/froggy-identity.md`), read fresh on
+ * every ask so no file watcher is needed. Undefined when missing or
+ * unreadable: the caller falls back to the embedded default.
+ */
+async function readIdentityOverride(): Promise<string | undefined> {
+  const root = vscode.workspace.workspaceFolders?.[0]?.uri;
+  if (!root) {
+    return undefined;
+  }
+  try {
+    return new TextDecoder('utf-8').decode(
+      await vscode.workspace.fs.readFile(
+        vscode.Uri.joinPath(root, ...IDENTITY_FILE_PATH.split('/'))
+      )
+    );
+  } catch {
+    return undefined;
+  }
+}
 
 export class AskAiPanel {
   public static currentPanel: AskAiPanel | undefined;
@@ -434,16 +456,18 @@ export class AskAiPanel {
       );
       const confirmList =
         config.get<string[]>(CONFIRM_SETTING_KEY, [...CONFIRM_SETTING_DEFAULT]) ?? [];
-      // Unsaved preamble: OS/shell match + default to the terminal tool
-      // (only named when actually offered) + do-not-redo grounding +
-      // default to the web search tool on explicit internet requests (only
-      // named when actually offered) + runnable skill catalog (so matching
-      // requests route to the skill runner instead of the terminal) +
-      // skill-factory nudge (creation requests delegate to the builder
-      // agent) + watched-browser observe nudge + files-refresh nudge +
+      // Unsaved preamble, identity first: personal-agent framing (embedded
+      // default, workspace .github/froggy-identity.md wins when present) +
+      // OS/shell match + default to the terminal tool (only named when
+      // actually offered) + do-not-redo grounding + default to the web
+      // search tool on explicit internet requests (only named when actually
+      // offered) + runnable skill catalog (so matching requests route to
+      // the skill runner instead of the terminal) + skill-factory nudge
+      // (creation requests delegate to the builder agent) +
+      // watched-browser observe nudge + files-refresh nudge +
       // clarify-when-ambiguous nudge + chart nudge (data answers also
-      // render the most adapted chart) + structured-questions nudge
-      // (only named when offered).
+      // render the most adapted chart) + structured-questions nudge (only
+      // named when offered).
       const offeredNames = tools.map((tool) => tool.name);
       const skillsHint = offeredNames.includes(RUN_SKILL_TOOL_NAME)
         ? formatSkillsHint(await listRunnableSkills(), RUN_SKILL_TOOL_NAME)
@@ -454,18 +478,21 @@ export class AskAiPanel {
       const askQuestionsHint = offeredNames.includes(ASK_QUESTIONS_TOOL_NAME)
         ? formatAskQuestionsHint(ASK_QUESTIONS_TOOL_NAME)
         : '';
-      const preamble =
+      const identity = selectIdentityContent(await readIdentityOverride());
+      const preamble = prependIdentity(
+        identity,
         agentEnvironmentPreamble() +
-        terminalToolHint(offeredNames) +
-        historyGroundingHint() +
-        webSearchHint(offeredNames) +
-        browseWatchHint(offeredNames) +
-        refreshFilesHint(offeredNames) +
-        clarificationHint() +
-        chartHint() +
-        skillsHint +
-        createSkillHint +
-        askQuestionsHint;
+          terminalToolHint(offeredNames) +
+          historyGroundingHint() +
+          webSearchHint(offeredNames) +
+          browseWatchHint(offeredNames) +
+          refreshFilesHint(offeredNames) +
+          clarificationHint() +
+          chartHint() +
+          skillsHint +
+          createSkillHint +
+          askQuestionsHint
+      );
       // History replays past tool rounds (calls + results, as in the live
       // loop) — without them the model cannot tell previous turns' actions
       // were already performed and redoes them on every new question.

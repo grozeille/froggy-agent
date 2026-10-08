@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { DEFAULT_IDENTITY_MD, IDENTITY_FILE_PATH } from './agentIdentity';
 import { DEFAULT_SKILLS } from './defaultSkills';
 import { MEMORY_FILE_NAME } from './sections';
 import { SKILL_MD_NAME } from './skillCreate';
@@ -39,7 +40,8 @@ async function exists(uri: vscode.Uri): Promise<boolean> {
 
 /**
  * Scaffold a fresh Froggy Agent project in the open workspace: `data/`,
- * `memory.md`, the built-in skills, `.vscode/settings.json`, `.gitignore`
+ * `memory.md`, the built-in skills, the editable agent identity
+ * (`.github/froggy-identity.md`), `.vscode/settings.json`, `.gitignore`
  * entries and the workspace `.venv`. Only missing pieces are created:
  * existing files are never overwritten. Alerts when Python is missing
  * instead of creating the venv.
@@ -93,6 +95,13 @@ export async function setupProject(refresh: () => void): Promise<void> {
   }
   if (newSkills > 0) {
     created.push(newSkills === 1 ? '1 built-in skill' : `${newSkills} built-in skills`);
+  }
+
+  const identityUri = vscode.Uri.joinPath(root, ...IDENTITY_FILE_PATH.split('/'));
+  if (!(await exists(identityUri))) {
+    await vscode.workspace.fs.createDirectory(vscode.Uri.joinPath(root, '.github'));
+    await vscode.workspace.fs.writeFile(identityUri, encoder.encode(DEFAULT_IDENTITY_MD));
+    created.push(IDENTITY_FILE_PATH);
   }
 
   const settingsUri = vscode.Uri.joinPath(root, ...VSCODE_SETTINGS_PATH.split('/'));

@@ -1,3 +1,5 @@
-# Skill templates are embedded template literals: they must stay LF-only on
-# every checkout so scaffolded files are identical on all platforms.
+# Skill templates and the default identity are embedded template literals:
+# they must stay LF-only on every checkout so scaffolded files are
+# identical on all platforms.
 src/defaultSkills.ts text eol=lf
+src/agentIdentity.ts text eol=lf
