@@ -247,7 +247,8 @@ export class AskAiPanel {
       sessionId,
       id,
       title: description.title,
-      detail: description.detail
+      detail: description.detail,
+      explanation: description.explanation
     });
     this._notifyAttention(formatConfirmNotification(description.title));
     return new Promise<boolean>((resolve) => {

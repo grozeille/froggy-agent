@@ -119,7 +119,7 @@ export type AskAiExtensionMessage =
       busy: boolean;
     }
   | { command: 'model'; sessionId: string; name: string }
-  | { command: 'confirm'; sessionId: string; id: string; title: string; detail: string }
+  | { command: 'confirm'; sessionId: string; id: string; title: string; detail: string; explanation?: string }
   | { command: 'question'; sessionId: string; id: string; questions: AskedQuestion[] }
   | { command: 'actionLog'; sessionId: string }
   | { command: 'status'; sessionId: string; text: string }
