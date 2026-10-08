@@ -1,27 +1,19 @@
-import { execFile } from 'child_process';
-import { promisify } from 'util';
 import * as vscode from 'vscode';
-import { DEPS_MARKER_NAME, PIP_INSTALL_TIMEOUT_MS, hashRequirements } from './pythonEnv';
+import { DEPS_MARKER_NAME, hashRequirements } from './pythonEnv';
 import { ensureWorkspacePython } from './pythonEnvSetup';
+import { installSkillRequirements, runPythonScript } from './skillExec';
 import { extractSkillDescription, extractSkillTitle } from './skills';
 import {
-  formatCommandLine,
   formatSkillList,
-  MAX_SKILL_OUTPUT_CHARS,
   REQUIREMENTS_FILE_NAME,
-  recordRunCommand,
   resolveSkillName,
   RUN_SKILL_TOOL_NAME,
   SKILL_SCRIPT_NAME,
-  SKILL_TIMEOUT_MS,
   SKILLS_DIR_NAME,
-  truncateOutput,
   venvPythonPath,
   type RunnableSkill,
   type RunSkillToolInput
 } from './skillRun';
-
-const execFileAsync = promisify(execFile);
 
 async function exists(uri: vscode.Uri): Promise<boolean> {
   try {
@@ -159,27 +151,7 @@ export class RunSkillTool implements vscode.LanguageModelTool<RunSkillToolInput>
     } catch {
       // Missing or unreadable marker: install below.
     }
-    recordRunCommand(formatCommandLine(python, ['-m', 'pip', 'install', '-r', REQUIREMENTS_FILE_NAME]));
-    try {
-      await execFileAsync(python, ['-m', 'pip', 'install', '-r', REQUIREMENTS_FILE_NAME], {
-        cwd: skillDir.fsPath,
-        timeout: PIP_INSTALL_TIMEOUT_MS,
-        windowsHide: true
-      });
-    } catch (err) {
-      const code = (err as { code?: unknown }).code;
-      if (code === 'ETIMEDOUT') {
-        throw new Error(
-          `Installing the skill requirements timed out after ${PIP_INSTALL_TIMEOUT_MS / 1000}s.`
-        );
-      }
-      const detail = [(err as { stdout?: unknown }).stdout, (err as { stderr?: unknown }).stderr]
-        .filter((text): text is string => typeof text === 'string' && text.trim().length > 0)
-        .join('\n');
-      throw new Error(
-        `Failed to install the skill requirements.${detail ? `\n${truncateOutput(detail, 2000)}` : ''}`
-      );
-    }
+    await installSkillRequirements(python, skillDir.fsPath);
     try {
       await vscode.workspace.fs.writeFile(marker, new TextEncoder().encode(expected));
     } catch {
@@ -197,38 +169,7 @@ export class RunSkillTool implements vscode.LanguageModelTool<RunSkillToolInput>
     // Prefer the caller's interpreter, else the project's own environment,
     // else PATH.
     const interpreter = python ?? (await this._defaultPython(root));
-    recordRunCommand(formatCommandLine(interpreter, [script.fsPath, ...args]));
-    let stdout: string;
-    let stderr: string;
-    try {
-      ({ stdout, stderr } = await execFileAsync(interpreter, [script.fsPath, ...args], {
-        cwd: root.fsPath,
-        timeout: SKILL_TIMEOUT_MS,
-        maxBuffer: 1024 * 1024,
-        windowsHide: true
-      }));
-    } catch (err) {
-      const code = (err as { code?: unknown }).code;
-      const out = (err as { stdout?: unknown; stderr?: unknown }).stdout;
-      const errText = (err as { stderr?: unknown }).stderr;
-      if (code === 'ENOENT') {
-        throw new Error(
-          'Python was not found. Install Python 3 on PATH or add a .venv to the workspace.'
-        );
-      }
-      if (code === 'ETIMEDOUT') {
-        throw new Error(`Skill timed out after ${SKILL_TIMEOUT_MS / 1000}s.`);
-      }
-      const detail = [out, errText]
-        .filter((text): text is string => typeof text === 'string' && text.trim().length > 0)
-        .join('\n');
-      throw new Error(
-        `Skill failed (exit ${String(code)}).${detail ? `\n${truncateOutput(detail, 2000)}` : ''}`
-      );
-    }
-    const output = stdout.trim() ? stdout : '(no output)';
-    const warnings = stderr.trim() ? `\n[stderr]\n${stderr.trim()}` : '';
-    return truncateOutput(`${output.trim()}${warnings}`, MAX_SKILL_OUTPUT_CHARS);
+    return runPythonScript(interpreter, script.fsPath, args, root.fsPath);
   }
 }
 

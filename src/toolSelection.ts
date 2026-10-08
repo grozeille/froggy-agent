@@ -51,6 +51,7 @@ export function needsConfirmation(toolName: string, confirmList: readonly string
 export interface ToolCallDescription {
   title: string;
   detail: string;
+  explanation?: string;
 }
 
 function stringField(input: unknown, names: readonly string[]): string | undefined {
@@ -87,8 +88,8 @@ function truncateDetail(text: string, maxChars: number): string {
 
 /**
  * Describe a gated tool call for the in-chat confirmation card. Terminal
- * tools show the command plus the model's explanation (the popup summary,
- * without the popup); the skill runner shows the skill and its arguments,
+ * tools show the command with the model's explanation split out (shown first,
+ * outside the command block); the skill runner shows the skill and its arguments,
  * the skill factory the new skill and its task; anything else falls back
  * to the tool name with a JSON summary.
  */
@@ -101,8 +102,12 @@ export function describeToolCall(
     const command = stringField(input, ['command', 'text', 'value']);
     if (command) {
       const explanation = stringField(input, ['explanation', 'goal']);
-      const detail = explanation ? `${command}\n${explanation}` : command;
-      return { title: 'Run this command?', detail: truncateDetail(detail, maxChars) };
+      const detail = truncateDetail(command, maxChars);
+      return {
+        title: 'Run this command?',
+        detail,
+        ...(explanation ? { explanation: truncateDetail(explanation, maxChars) } : {})
+      };
     }
   }
   if (toolName === 'froggyRunSkill') {
@@ -139,6 +144,66 @@ export function describeToolCall(
     };
   }
   return { title: `Run "${toolName}"?`, detail: summarizeToolInput(input, maxChars) };
+}
+
+/**
+ * Friendly gerund phrase for a tool run, shown in the panel status line
+ * while the tool executes ("Building the skill…"). Unknown (external) tools
+ * fall back to their raw name.
+ */
+export function toolRunLabel(toolName: string): string {
+  switch (toolName) {
+    case 'froggyCreateSkill':
+      return 'Building the skill';
+    case 'froggyRunSkill':
+      return 'Running the skill';
+    case 'froggyRunTerminal':
+    case 'run_in_terminal':
+    case 'send_to_terminal':
+      return 'Running the command';
+    case 'froggyWebSearch':
+      return 'Searching the web';
+    case 'froggyFetchWebPage':
+      return 'Reading the page';
+    case 'froggyGoogleSearch':
+      return 'Searching Google';
+    case 'froggyOpenBrowserPage':
+    case 'froggyBrowseOpen':
+      return 'Opening the page';
+    case 'froggyBrowseState':
+      return 'Reading the watched browser';
+    case 'froggyBrowseScreenshot':
+      return 'Capturing the screenshot';
+    case 'froggyReadDataFile':
+    case 'froggyListDataFiles':
+      return 'Reading data files';
+    case 'froggyReadMemory':
+      return 'Reading memory';
+    case 'froggyAppendMemory':
+      return 'Updating memory';
+    case 'froggyDateTime':
+      return 'Reading the date';
+    case 'froggyRefreshFiles':
+      return 'Refreshing the Files view';
+    case 'froggyAskQuestions':
+      return 'Asking questions';
+    default:
+      return `Running ${toolName}`;
+  }
+}
+
+/** Status line posted when a tool run starts. */
+export function formatToolRunning(label: string): string {
+  return `${label}…`;
+}
+
+/**
+ * Heartbeat status line while a tool run drags on (slow builder agent,
+ * long command): proves the run is still alive with its elapsed time.
+ */
+export function formatToolStillRunning(label: string, elapsedMs: number): string {
+  const lowered = label.charAt(0).toLowerCase() + label.slice(1);
+  return `Still ${lowered}… (${Math.max(0, Math.floor(elapsedMs / 1000))}s)`;
 }
 
 /** One-line JSON summary of a tool input for the confirmation dialog. */

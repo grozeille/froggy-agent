@@ -34,6 +34,13 @@ export class AskAiActionsProvider implements vscode.TreeDataProvider<vscode.Tree
     memory.tooltip = memoryUri.fsPath;
     memory.contextValue = 'memory';
     items.push(memory);
+
+    const browser = new vscode.TreeItem('Open Browser', vscode.TreeItemCollapsibleState.None);
+    browser.iconPath = new vscode.ThemeIcon('globe');
+    browser.command = { command: 'froggy-agent.openBrowser', title: 'Open Browser' };
+    browser.tooltip = 'Open the watched browser';
+    browser.contextValue = 'openBrowser';
+    items.push(browser);
     return items;
   }
 }
